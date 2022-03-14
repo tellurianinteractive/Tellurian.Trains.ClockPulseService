@@ -1,4 +1,4 @@
-using Service;
+using Tellurian.Trains.ClockPulseApp.Service;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
