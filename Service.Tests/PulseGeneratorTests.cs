@@ -9,8 +9,8 @@ public class PulseGeneratorTests
 {
     static PulseGeneratorSettings Settings => new()
     {
-        FastForwardMinuteMilliseconds = 200,
-        PulseLengthMilliseconds = 100,
+        FastForwardIntervalMilliseconds = 200,
+        PulseDurationMilliseconds = 100,
         AnalogueClockStartTime = "06:00"
     };
 

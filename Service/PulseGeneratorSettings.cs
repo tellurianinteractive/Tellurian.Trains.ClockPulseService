@@ -8,8 +8,8 @@ public sealed class PulseGeneratorSettings
     public string AnalogueClockStartTime { get; set; } = "06:00";
     public bool Use12HourClock { get; set; } = false;
     public int PollIntervalSeconds { get; set; }
-    public int PulseLengthMilliseconds { get; init; }
-    public int FastForwardMinuteMilliseconds { get; init; }
+    public int PulseDurationMilliseconds { get; init; }
+    public int FastForwardIntervalMilliseconds { get; init; }
     public UdpBroadcastSettings UdpBroadcast { get; set; } = new ();
     public SerialPulseSinkSettings SerialPulseSink { get; init; } = new ();
     public override string ToString()
@@ -19,8 +19,8 @@ public sealed class PulseGeneratorSettings
         text.AppendLine($"Poll interval seconds: {PollIntervalSeconds}");
         text.AppendLine($"Analogue clock start time: {AnalogueClockStartTime}");
         text.AppendLine($"Use 12 hour clock: {Use12HourClock}");
-        text.AppendLine($"Pulse length: {PulseLengthMilliseconds} ms");
-        text.AppendLine($"Fast-forward minute: {FastForwardMinuteMilliseconds} ms");
+        text.AppendLine($"Pulse duration: {PulseDurationMilliseconds} ms");
+        text.AppendLine($"Fast-forward interval: {FastForwardIntervalMilliseconds} ms");
         text.AppendLine(SerialPulseSink.ToString());
         return text.ToString();
     }

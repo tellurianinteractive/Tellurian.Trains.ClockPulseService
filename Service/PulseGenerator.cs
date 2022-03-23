@@ -49,7 +49,7 @@ public sealed class PulseGenerator : IAsyncDisposable
 
     private async Task FastForward()
     {
-        using PeriodicTimer fastTimer = new(TimeSpan.FromMilliseconds(Settings.FastForwardMinuteMilliseconds));
+        using PeriodicTimer fastTimer = new(TimeSpan.FromMilliseconds(Settings.FastForwardIntervalMilliseconds));
         while (AnalogueClockTime != CurrentTime)
         {
             await fastTimer.WaitForNextTickAsync();
@@ -66,7 +66,7 @@ public sealed class PulseGenerator : IAsyncDisposable
         else
             await SetPositive();
 
-        await Task.Delay(Settings.PulseLengthMilliseconds);
+        await Task.Delay(Settings.PulseDurationMilliseconds);
         await SetZero();
     }
 
