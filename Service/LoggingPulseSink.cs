@@ -1,6 +1,6 @@
 ﻿namespace Tellurian.Trains.ClockPulseApp.Service;
 
-public class LoggingPulseSink : IPulseSink
+public sealed class LoggingPulseSink : IPulseSink
 {
     public LoggingPulseSink(ILogger logger) => Logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -20,6 +20,18 @@ public class LoggingPulseSink : IPulseSink
     public Task ZeroVoltageAsync()
     {
         Logger.LogInformation("{Timestamp:o} Zero voltage", DateTimeOffset.Now);
+        return Task.CompletedTask;
+    }
+
+    public Task StartAsync()
+    {
+        Logger.LogInformation("{Timestamp:o} Started logging sink.", DateTimeOffset.Now);
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync()
+    {
+        Logger.LogInformation("{Timestamp:o} Stopped logging sink.", DateTimeOffset.Now);
         return Task.CompletedTask;
     }
 }

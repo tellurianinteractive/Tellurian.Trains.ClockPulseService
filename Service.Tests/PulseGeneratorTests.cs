@@ -67,6 +67,8 @@ public class PulseGeneratorTests
         public Task NegativeVoltageAsync() => throw new NotImplementedException();
         public Task PositiveVoltageAsync() => throw new NotImplementedException();
         public Task ZeroVoltageAsync() => throw new NotImplementedException();
+        public Task StartAsync() => Task.CompletedTask;
+        public Task StopAsync() => Task.CompletedTask;
     }
 
     internal class MonitoringPulseSink : IPulseSink
@@ -84,6 +86,9 @@ public class PulseGeneratorTests
             voltageChanges.Add(new(DateTimeOffset.Now, 12));
             return Task.CompletedTask;
         }
+
+        public Task StartAsync() => Task.CompletedTask;
+        public Task StopAsync() => Task.CompletedTask;
 
         public Task ZeroVoltageAsync()
         {

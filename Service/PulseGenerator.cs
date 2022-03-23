@@ -8,6 +8,7 @@ public sealed class PulseGenerator : IAsyncDisposable
     private readonly ILogger Logger;
     private readonly PulseGeneratorSettings Settings;
     private readonly IEnumerable<IPulseSink> Sinks;
+    private bool IsInitialized;
 
     public TimeSpan CurrentTime { get; private set; }
     public TimeSpan AnalogueClockTime { get; private set; }
@@ -21,8 +22,15 @@ public sealed class PulseGenerator : IAsyncDisposable
         Logger = logger;
     }
 
+    private async Task InitializeAsync()
+    {
+        foreach (var sink in Sinks) await sink.StartAsync();
+        IsInitialized = true;
+    }
+
     public async Task Update(ClockStatus status)
     {
+        if (!IsInitialized) await InitializeAsync();
         Logger.LogInformation("Analogue time: {time}", AnalogueClockTime.AsTime(Settings.Use12HourClock));
         if (status.IsUnavailable || status.IsRealtime || status.IsPaused) return;
         CurrentTime = status.Time.AsTimespan(Settings.Use12HourClock);
@@ -77,6 +85,7 @@ public sealed class PulseGenerator : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        foreach(var sink in Sinks) await sink.StopAsync();
         foreach (var sink in Sinks.OfType<IDisposable>())  sink.Dispose();
         foreach(var sink in Sinks.OfType<IAsyncDisposable>()) await sink.DisposeAsync();
     }
