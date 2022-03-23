@@ -49,7 +49,7 @@ public sealed class PulseGenerator : IAsyncDisposable
 
     private async Task FastForward()
     {
-        PeriodicTimer fastTimer = new(TimeSpan.FromMilliseconds(Settings.FastForwardMinuteMilliseconds));
+        using PeriodicTimer fastTimer = new(TimeSpan.FromMilliseconds(Settings.FastForwardMinuteMilliseconds));
         while (AnalogueClockTime != CurrentTime)
         {
             await fastTimer.WaitForNextTickAsync();
@@ -68,8 +68,8 @@ public sealed class PulseGenerator : IAsyncDisposable
 
         await Task.Delay(Settings.PulseLengthMilliseconds);
         await SetZero();
-    } 
-    
+    }
+
     private async Task SetPositive()
     {
         foreach (var sink in Sinks) await sink.PositiveVoltageAsync();
@@ -85,9 +85,9 @@ public sealed class PulseGenerator : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        foreach(var sink in Sinks) await sink.StopAsync();
-        foreach (var sink in Sinks.OfType<IDisposable>())  sink.Dispose();
-        foreach(var sink in Sinks.OfType<IAsyncDisposable>()) await sink.DisposeAsync();
+        foreach (var sink in Sinks) await sink.StopAsync();
+        foreach (var sink in Sinks.OfType<IDisposable>()) sink.Dispose();
+        foreach (var sink in Sinks.OfType<IAsyncDisposable>()) await sink.DisposeAsync();
     }
 
     public override string ToString() => Settings.ToString();
