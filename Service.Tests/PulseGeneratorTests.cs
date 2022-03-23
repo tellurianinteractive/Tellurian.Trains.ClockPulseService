@@ -7,7 +7,7 @@ namespace Tellurian.Trains.ClockPulseApp.Service.Tests;
 [TestClass]
 public class PulseGeneratorTests
 {
-    static PulseGeneratorOptions Settings => new()
+    static PulseGeneratorSettings Settings => new()
     {
         FastForwardMinuteMilliseconds = 200,
         PulseLengthMilliseconds = 100,

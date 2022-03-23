@@ -5,8 +5,8 @@ IHost host = Host.CreateDefaultBuilder(args)
     {
         services.AddHostedService<Worker>();
         var configurationRoot = context.Configuration;
-        services.Configure<PulseGeneratorOptions>(
-            configurationRoot.GetSection(nameof(PulseGeneratorOptions)));
+        services.Configure<PulseGeneratorSettings>(
+            configurationRoot.GetSection(nameof(PulseGeneratorSettings)));
 
     })            
     .Build();

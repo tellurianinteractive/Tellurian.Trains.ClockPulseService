@@ -18,10 +18,10 @@ public class Worker : BackgroundService
         Timer = new PeriodicTimer(TimeSpan.FromSeconds(PulseGenerator.PollIntervalSeconds));
     }
 
-    private IOptions<PulseGeneratorOptions> GetOptions(IConfiguration configuration)
+    private IOptions<PulseGeneratorSettings> GetOptions(IConfiguration configuration)
     {
-        var settings = configuration.GetSection(nameof(PulseGeneratorOptions))
-             .Get<PulseGeneratorOptions>();
+        var settings = configuration.GetSection(nameof(PulseGeneratorSettings))
+             .Get<PulseGeneratorSettings>();
         return Options.Create(settings);
     }
 
@@ -35,8 +35,13 @@ public class Worker : BackgroundService
         using var client = new HttpClient();
         var href = PulseGenerator.RemoteClockTimeHref;
         Logger.LogInformation("Worker started at: {time}", DateTimeOffset.Now);
+        Logger.LogInformation("Settings: {settings}",PulseGenerator);
         while (await Timer.WaitForNextTickAsync(stoppingToken))
         {
+            if (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
             var response = await client.GetAsync(href, stoppingToken);
             if (response.IsSuccessStatusCode)
             {
@@ -51,5 +56,7 @@ public class Worker : BackgroundService
                 Logger.LogError("Error at: {time}. Responded with code {code}", DateTimeOffset.Now, response.StatusCode);
             }
         }
+        Timer.Dispose();
+        await PulseGenerator.DisposeAsync();
     }
 }
