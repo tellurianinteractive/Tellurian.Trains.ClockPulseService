@@ -31,7 +31,6 @@ public sealed class PulseGenerator : IAsyncDisposable
     public async Task Update(ClockStatus status)
     {
         if (!IsInitialized) await InitializeAsync();
-        Logger.LogInformation("Analogue time: {time}", AnalogueClockTime.AsTime(Settings.Use12HourClock));
         if (status.IsUnavailable || status.IsRealtime || status.IsPaused) return;
         CurrentTime = status.Time.AsTimespan(Settings.Use12HourClock);
         if (CurrentTime == AnalogueClockTime) return;
@@ -44,6 +43,7 @@ public sealed class PulseGenerator : IAsyncDisposable
         {
             await FastForward();
         }
+        Logger.LogInformation("\x1B[1m\x1B[33mUpdated analogue time: {time}\x1B[39m\x1B[22m", AnalogueClockTime.AsTime(Settings.Use12HourClock));
         await Task.CompletedTask;
     }
 
@@ -55,7 +55,7 @@ public sealed class PulseGenerator : IAsyncDisposable
             await fastTimer.WaitForNextTickAsync();
             await MoveOneMinute();
             AnalogueClockTime = AnalogueClockTime.AddOneMinute(Settings.Use12HourClock);
-            Logger.LogInformation("Fast forwarding analogue time: {time}", AnalogueClockTime.AsTime(Settings.Use12HourClock));
+            Logger.LogInformation("\x1B[1m\x1B[33mFast forwarding analogue time: {time}\x1B[39m\x1B[22m", AnalogueClockTime.AsTime(Settings.Use12HourClock));
         }
     }
 
