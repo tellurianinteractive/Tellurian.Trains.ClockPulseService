@@ -30,7 +30,6 @@ public sealed class UdpBroadcastPulseSink : IPulseSink, IDisposable
     public async Task NegativeVoltageAsync() => await Broadcaster.SendAsync(Negative, 1, BroadcastEndpoint);
     public async Task PositiveVoltageAsync() => await Broadcaster.SendAsync(Positive, 1, BroadcastEndpoint);
     public async Task ZeroVoltageAsync() => await Broadcaster.SendAsync(Zero, 1, BroadcastEndpoint);
-    public void Dispose() => Broadcaster.Dispose();
     public Task StartAsync()
     {
         Logger.LogInformation("UDP broadcast started on {endpoint}.", BroadcastEndpoint);
@@ -42,5 +41,6 @@ public sealed class UdpBroadcastPulseSink : IPulseSink, IDisposable
         Logger.LogInformation("UDP broadcast stopped on {endpoint}.", BroadcastEndpoint);
         return Task.CompletedTask;
     }
+    public void Dispose() => Broadcaster.Dispose();
 }
 

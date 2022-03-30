@@ -22,7 +22,7 @@ The logical pulses are:
 - **Zero voltage**, is sent after the configured pulse length duration.
 
 
-Much of the beahviour is [configurable](https://github.com/fjallemark/ClockPulseService/blob/master/Service/appsettings.json). 
+Much of the behaviour is [configurable](https://github.com/fjallemark/ClockPulseService/blob/master/Service/appsettings.json). 
 
 ### Sinks
 A *sink* is a component that translates logical clock signals to some forme of I/O:
@@ -30,4 +30,11 @@ A *sink* is a component that translates logical clock signals to some forme of I
 - **UdpBroadcastPulseSink** broadcasts ASCII bytes '+', '-' and '_'.
 - **SerialPortPulseSink** sets DTR high for positive voltage, and RTS high for negative voltage. 
 However, it can be configured to use DTR only for both positive and negative voltage.
+- **RpiRelayBoardPulseSink** using three relays to control pulses and polarities.
+The [Rpi Relay Board](https://www.waveshare.com/wiki/RPi_Relay_Board) is a relay hat for *Raspberry Pi*
+ans works with this software when running on Linux.
+
+### Deployments
+To run the app locally, see [available deployments](https://onedrive.live.com/?id=DF287081A732D0D8%21302250&cid=DF287081A732D0D8). Select a folder and click download. 
+It will be downloaded as a ZIP-file. Unzip and transfer to the computer you will run it on.
 

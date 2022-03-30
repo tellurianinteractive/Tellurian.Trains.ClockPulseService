@@ -30,12 +30,14 @@ public sealed class UdpBroadcastSettings
 {
     public string IPAddress { get; set; } = string.Empty;
     public int PortNumber { get; set; }
+    public bool Disabled { get; set; } = true;
 }
 
 public sealed class SerialPulseSinkSettings
 {
     public string PortName { get; set; } = string.Empty;
     public bool DtrOnly { get; set; } = false;
+    public bool Disabled { get; set; } = true;
 
     public override string ToString() => 
         PortName.IsValidSerialPortName() ? $"Serial pulse sink: {PortName} with DTR-only: {DtrOnly} " : string.Empty;

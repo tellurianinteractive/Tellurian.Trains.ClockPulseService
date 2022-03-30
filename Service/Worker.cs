@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Options;
 using System.IO.Ports;
 using System.Net;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Tellurian.Trains.MeetingApp.Contracts;
 
@@ -16,15 +18,20 @@ public class Worker : BackgroundService
     {
         Logger = logger;
         var options = GetOptions(configuration);
+        var settings = options.Value;
         var sinks = new List<IPulseSink>() { new LoggingPulseSink(Logger) };
 
-        if (SerialPort.GetPortNames().Contains(options.Value.SerialPulseSink.PortName))
+        if (!settings.SerialPulseSink.Disabled && SerialPort.GetPortNames().Contains(settings.SerialPulseSink.PortName))
         {
-            sinks.Add(new SerialPortPulseSink(options.Value.SerialPulseSink.PortName, Logger, options.Value.SerialPulseSink.DtrOnly));
+            sinks.Add(new SerialPortPulseSink(settings.SerialPulseSink.PortName, Logger, settings.SerialPulseSink.DtrOnly));
         }
-        if (IPAddress.TryParse(options.Value.UdpBroadcast.IPAddress, out var iPAddress))
+        if (!settings.UdpBroadcast.Disabled && IPAddress.TryParse(settings.UdpBroadcast.IPAddress, out var iPAddress))
         {
-            sinks.Add(new UdpBroadcastPulseSink(new IPEndPoint(iPAddress, options.Value.UdpBroadcast.PortNumber), logger));
+            sinks.Add(new UdpBroadcastPulseSink(new IPEndPoint(iPAddress, settings.UdpBroadcast.PortNumber), logger));
+        }
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            sinks.Add(new RpiRelayBoardPulseSink(logger));
         }
         PulseGenerator = new PulseGenerator(options, sinks, Logger);
         Timer = new PeriodicTimer(TimeSpan.FromSeconds(PulseGenerator.PollIntervalSeconds));
@@ -46,8 +53,9 @@ public class Worker : BackgroundService
         };
         using var client = new HttpClient();
         var href = PulseGenerator.RemoteClockTimeHref;
-        Logger.LogInformation("Worker started at: {time}", DateTimeOffset.Now);
+        Logger.LogInformation("App version {version} started at {time}", Assembly.GetExecutingAssembly().GetName().Version, DateTimeOffset.Now);
         Logger.LogInformation("Settings: {settings}", PulseGenerator);
+        Logger.LogInformation("Installed sinks: {sinks}", string.Join(", ", PulseGenerator.InstalledSinksTypes));
         while (await Timer.WaitForNextTickAsync(stoppingToken))
         {
             if (stoppingToken.IsCancellationRequested) break;
@@ -66,7 +74,13 @@ public class Worker : BackgroundService
                 Logger.LogError("Error at: {time}. Responded with code {code}", DateTimeOffset.Now, response.StatusCode);
             }
         }
+    }
+
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        Logger.LogInformation("Stopping service...");
         Timer.Dispose();
         await PulseGenerator.DisposeAsync();
+        Logger.LogInformation("Stopped service.");
     }
 }

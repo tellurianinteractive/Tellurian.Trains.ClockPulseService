@@ -14,6 +14,8 @@ public sealed class PulseGenerator : IAsyncDisposable
     public TimeSpan AnalogueClockTime { get; private set; }
     public string RemoteClockTimeHref => Settings.RemoteClockTimeHref;
     public int PollIntervalSeconds => Settings.PollIntervalSeconds;
+
+    public IEnumerable<string> InstalledSinksTypes => Sinks.Select(s => s.GetType().Name);
     public PulseGenerator(IOptions<PulseGeneratorSettings> options, IEnumerable<IPulseSink> sinks, ILogger logger)
     {
         Settings = options.Value;
@@ -85,9 +87,11 @@ public sealed class PulseGenerator : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        Logger.LogInformation("Disposing {component}...", nameof(PulseGenerator));
         foreach (var sink in Sinks) await sink.StopAsync();
         foreach (var sink in Sinks.OfType<IDisposable>()) sink.Dispose();
         foreach (var sink in Sinks.OfType<IAsyncDisposable>()) await sink.DisposeAsync();
+        Logger.LogInformation("Disposed {component}", nameof(PulseGenerator));
     }
 
     public override string ToString() => Settings.ToString();
