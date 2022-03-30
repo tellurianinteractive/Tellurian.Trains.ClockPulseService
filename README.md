@@ -38,3 +38,24 @@ ans works with this software when running on Linux.
 To run the app locally, see [available deployments](https://onedrive.live.com/?id=DF287081A732D0D8%21302250&cid=DF287081A732D0D8). Select a folder and click download. 
 It will be downloaded as a ZIP-file. Unzip and transfer to the computer you will run it on.
 
+### A Real Example
+As discussed earlier in this thread and also on [this discussion on GitHub](https://github.com/tellurianinteractive/Tellurian.Trains.ModuleMeetingApp/discussions/44), there are many ideas of how to translate a stream of times to pulses for controlling an pulsedriven analogue clock.
+
+During March 2022, I started to make [Clock Pulse Service](https://github.com/fjallemark/ClockPulseService) for polling the [clock API](https://github.com/tellurianinteractive/Tellurian.Trains.ModuleMeetingApp/wiki/API-Guidelines) and generate data about pulses to send. 
+I also bought a [RPi Relay Board](https://www.waveshare.com/wiki/RPi_Relay_Board) and mounted it om my old Raspberry Pi 2. Then I wrote an implementation of [IPulseSink](https://github.com/fjallemark/ClockPulseService/blob/master/Service/RpiRelayBoardPulseSink.cs) for that relay board, and have now run it on the Raspberry Pi to test it out, and after some adjustments, it  seems to work as expected.
+
+With the software, it is also possible to directly use the I/O-pins on the Raspberry Pi without the relay board. This is fine if another device controlling the clock only needs low current I/O. 
+
+There are three I/O-pins/relays:
+- The first is set for every second.
+- The second is set for every even second.
+- The third is set for ever odd second.
+
+I would like to test it out, or having someone to test it out against a real clock. 
+There is currently a [distribution for **linux-arm**](https://onedrive.live.com/?id=DF287081A732D0D8%21302250&cid=DF287081A732D0D8) that can run on a Raspberry Pi. Download it, unzip and then follow these [instructions](https://docs.microsoft.com/en-us/dotnet/iot/deployment#deploying-a-self-contained-app), starting from point 3.
+
+The app defaults to use the **Demo clock** at https://fastclock.azurewebsites.net/, 
+but it can be changed in the *appsettings.json* file. 
+Use the demo clock to start, stop and reset to check if the analogue pulse driven clock ticks!
+
+
