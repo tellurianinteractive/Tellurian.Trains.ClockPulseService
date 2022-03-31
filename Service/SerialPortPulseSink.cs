@@ -71,13 +71,13 @@ public sealed class SerialPortPulseSink : IPulseSink, IDisposable
     }
 
     public void Dispose() => Port?.Dispose();
-    public Task StartAsync()
+    public Task InitializeAsync()
     {
         Logger.LogInformation("Serial port pulse sink started.");
         return Task.CompletedTask;
     }
 
-    public Task StopAsync()
+    public Task CleanupAsync()
     {
         Logger.LogInformation("Serial port pulse sink stopped.");
         return Task.CompletedTask;

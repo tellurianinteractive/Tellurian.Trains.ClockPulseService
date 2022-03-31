@@ -31,7 +31,7 @@ public class Worker : BackgroundService
         }
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            sinks.Add(new RpiRelayBoardPulseSink(logger));
+            sinks.Add(new RpiRelayBoardPulseSink(logger, settings.RpiRelayBoardPulseSink.UseRelay1AsClockStatus));
         }
         PulseGenerator = new PulseGenerator(options, sinks, Logger);
         Timer = new PeriodicTimer(TimeSpan.FromSeconds(PulseGenerator.PollIntervalSeconds));

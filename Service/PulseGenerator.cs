@@ -9,6 +9,8 @@ public sealed class PulseGenerator : IAsyncDisposable
     private readonly PulseGeneratorSettings Settings;
     private readonly IEnumerable<IPulseSink> Sinks;
     private bool IsInitialized;
+    private bool CanWriteFiles;
+    private bool WasStopped;
 
     public TimeSpan CurrentTime { get; private set; }
     public TimeSpan AnalogueClockTime { get; private set; }
@@ -20,26 +22,38 @@ public sealed class PulseGenerator : IAsyncDisposable
     {
         Settings = options.Value;
         Sinks = sinks;
-        AnalogueClockTime = Settings.AnalogueClockStartTime.AsTimespan(Settings.Use12HourClock);
         Logger = logger;
+        CanWriteFiles = true;
     }
 
     private async Task InitializeAsync()
     {
-        foreach (var sink in Sinks) await sink.StartAsync();
+        foreach (var sink in Sinks) await sink.InitializeAsync();
+        AnalogueClockTime = await InitializeAnalogueTime();
+        Logger.LogInformation("Analogue time starting at {time}", AnalogueClockTime.AsTime());
         IsInitialized = true;
     }
 
     public async Task Update(ClockStatus status)
     {
         if (!IsInitialized) await InitializeAsync();
-        if (status.IsUnavailable || status.IsRealtime || status.IsPaused) return;
+        if (status.IsUnavailable || status.IsRealtime || status.IsPaused) {
+            foreach (var sink in Sinks.OfType<IStatusSink>()) await sink.ClockIsStoppedAsync();
+            WasStopped = true;
+            return;
+        }
+        if (WasStopped)
+        {
+            foreach (var sink in Sinks.OfType<IStatusSink>()) await sink.ClockIsStartedAsync();
+            WasStopped = false;
+        }
         CurrentTime = status.Time.AsTimespan(Settings.Use12HourClock);
         if (CurrentTime == AnalogueClockTime) return;
         if (AnalogueClockTime.IsOneMinuteAfter(CurrentTime, Settings.Use12HourClock))
         {
             await MoveOneMinute();
             AnalogueClockTime = CurrentTime;
+            await SaveAnalogueTime();
         }
         else
         {
@@ -57,6 +71,7 @@ public sealed class PulseGenerator : IAsyncDisposable
             await fastTimer.WaitForNextTickAsync();
             await MoveOneMinute();
             AnalogueClockTime = AnalogueClockTime.AddOneMinute(Settings.Use12HourClock);
+            await SaveAnalogueTime();
             Logger.LogInformation("\x1B[1m\x1B[33mFast forwarding analogue time: {time}\x1B[39m\x1B[22m", AnalogueClockTime.AsTime(Settings.Use12HourClock));
         }
     }
@@ -70,6 +85,35 @@ public sealed class PulseGenerator : IAsyncDisposable
 
         await Task.Delay(Settings.PulseDurationMilliseconds);
         await SetZero();
+    }
+
+    private const string LastAnalogueTimeFileName = "AnalogueTime.txt";
+    private async Task SaveAnalogueTime()
+    {
+        if (!CanWriteFiles) return;
+        try
+        {
+            await File.WriteAllTextAsync(LastAnalogueTimeFileName, AnalogueClockTime.AsTime());
+
+        }
+        catch (IOException ex)
+        {
+            CanWriteFiles = false;
+            Logger.LogError(ex,"Cannot write analogue time to {file}", LastAnalogueTimeFileName);
+        }
+    }
+
+    private async Task<TimeSpan> InitializeAnalogueTime()
+    {
+        var initialTime = Settings.AnalogueClockStartTime;
+        if (File.Exists(LastAnalogueTimeFileName))
+        {
+            var fileTime = await File.ReadAllTextAsync(LastAnalogueTimeFileName);
+            if (fileTime is not null && fileTime.Length == 5) initialTime = fileTime;
+
+        }
+        return initialTime.AsTimespan(Settings.Use12HourClock);
+
     }
 
     private async Task SetPositive()
@@ -88,7 +132,7 @@ public sealed class PulseGenerator : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         Logger.LogInformation("Disposing {component}...", nameof(PulseGenerator));
-        foreach (var sink in Sinks) await sink.StopAsync();
+        foreach (var sink in Sinks) await sink.CleanupAsync();
         foreach (var sink in Sinks.OfType<IDisposable>()) sink.Dispose();
         foreach (var sink in Sinks.OfType<IAsyncDisposable>()) await sink.DisposeAsync();
         Logger.LogInformation("Disposed {component}", nameof(PulseGenerator));

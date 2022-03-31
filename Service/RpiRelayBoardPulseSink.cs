@@ -1,37 +1,39 @@
 ﻿using System.Device.Gpio;
 
 namespace Tellurian.Trains.ClockPulseApp.Service;
-public sealed class RpiRelayBoardPulseSink : IPulseSink, IDisposable
+public sealed class RpiRelayBoardPulseSink : IPulseSink, IStatusSink, IDisposable
 {
-    public RpiRelayBoardPulseSink(ILogger logger)
+    public RpiRelayBoardPulseSink(ILogger logger, bool useRelay1AsClockStatus = false)
     {
         Logger = logger;
+        UseRelay1AsClockStatus = useRelay1AsClockStatus;
     }
     private readonly ILogger Logger;
+    private readonly bool UseRelay1AsClockStatus;
     private readonly GpioController Controller = new();
     private const int GeneralPulsePin = 26;
     private const int PositivePulsePin = 20;
     private const int NegativePulsePin = 21;
     public Task NegativeVoltageAsync()
     {
-        Controller.Write(GeneralPulsePin, PinValue.Low);
+        if (!UseRelay1AsClockStatus) Controller.Write(GeneralPulsePin, PinValue.Low);
         Controller.Write(NegativePulsePin, PinValue.Low);
         return Task.CompletedTask;
     }
     public Task PositiveVoltageAsync()
     {
-        Controller.Write(GeneralPulsePin, PinValue.Low);
+        if (!UseRelay1AsClockStatus) Controller.Write(GeneralPulsePin, PinValue.Low);
         Controller.Write(PositivePulsePin, PinValue.Low);
         return Task.CompletedTask;
     }
     public Task ZeroVoltageAsync()
     {
-        Controller.Write(GeneralPulsePin, PinValue.High);
+        if (!UseRelay1AsClockStatus) Controller.Write(GeneralPulsePin, PinValue.High);
         Controller.Write(PositivePulsePin, PinValue.High);
         Controller.Write(NegativePulsePin, PinValue.High);
         return Task.CompletedTask;
     }
-    public Task StartAsync()
+    public Task InitializeAsync()
     {
         try
         {
@@ -47,9 +49,9 @@ public sealed class RpiRelayBoardPulseSink : IPulseSink, IDisposable
         }
         return Task.CompletedTask;
     }
-    public async Task StopAsync()
+    public async Task CleanupAsync()
     {
-        await ZeroVoltageAsync(); 
+        await ZeroVoltageAsync();
         Controller.ClosePin(GeneralPulsePin);
         Controller.ClosePin(PositivePulsePin);
         Controller.ClosePin(NegativePulsePin);
@@ -57,5 +59,20 @@ public sealed class RpiRelayBoardPulseSink : IPulseSink, IDisposable
     }
 
     public void Dispose() => Controller.Dispose();
-
+    public Task ClockIsStartedAsync()
+    {
+        if (UseRelay1AsClockStatus)
+        {
+            Controller.Write(GeneralPulsePin, PinValue.High);
+        }
+        return Task.CompletedTask;
+    }
+    public Task ClockIsStoppedAsync()
+    {
+        if (UseRelay1AsClockStatus)
+        {
+            Controller.Write(GeneralPulsePin, PinValue.Low);
+        }
+        return Task.CompletedTask;
+    }
 }

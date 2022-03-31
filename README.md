@@ -5,7 +5,14 @@ and creates logical pulses to drive analogue clocks.**
 
 > If your clock is not a pulse-driven 12-hour clock, then my software is not the right solution. 
 The alternative is to call the clock API and getting the time. 
-
+### News
+Release 1.3.0 at 2022-03-31 adds the following:
+- **Monitoring of clock running or not** through the new sink type *IStatusSink*. 
+If this interface is implemented in a sink, you can control indicators whether the clock is running or not.
+- **Analogue time initialisation** is now in a separate file *AnalogueTime.txt*. While this file can be manual edited, it will be overwritten
+with the current analouge time. This makes restart of the service better, because it *remebers* the last analogue time.
+If the file does not exist or for some reason cannon be written, the *AnalogueClockStartTime* in *appsettings.json* will be used.
+### Motivation 
 The whole point with the software is to eliminate the need for any 
 logic translating time to pulses in other software. 
 This software also automatically *fast-forward* the pulsing if the analogue time is not 

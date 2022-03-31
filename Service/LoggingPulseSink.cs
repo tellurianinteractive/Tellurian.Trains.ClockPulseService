@@ -23,13 +23,13 @@ public sealed class LoggingPulseSink : IPulseSink
         return Task.CompletedTask;
     }
 
-    public Task StartAsync()
+    public Task InitializeAsync()
     {
         Logger.LogInformation("{Timestamp:o} Started logging sink.", DateTimeOffset.Now);
         return Task.CompletedTask;
     }
 
-    public Task StopAsync()
+    public Task CleanupAsync()
     {
         Logger.LogInformation("{Timestamp:o} Stopped logging sink.", DateTimeOffset.Now);
         return Task.CompletedTask;
