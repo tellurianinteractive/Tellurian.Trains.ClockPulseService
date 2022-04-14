@@ -11,25 +11,27 @@ public sealed class PulseGenerator : IAsyncDisposable
     private bool IsInitialized;
     private bool CanWriteFiles;
     private bool WasStopped;
-    private bool ResetOnStart;
+    private readonly bool ResetOnStart;
 
     public TimeSpan CurrentTime { get; private set; }
     public TimeSpan AnalogueClockTime { get; private set; }
     public string RemoteClockTimeHref => Settings.RemoteClockTimeHref;
     public int PollIntervalSeconds => Settings.PollIntervalSeconds;
+    public int ErrorWaitRetryMilliseconds => Settings.ErrorWaitRetrySeconds * 60;
 
     public IEnumerable<string> InstalledSinksTypes => Sinks.Select(s => s.GetType().Name);
-    public PulseGenerator(IOptions<PulseGeneratorSettings> options, IEnumerable<IPulseSink> sinks, bool resetOnStart, ILogger logger)
+    public PulseGenerator(IOptions<PulseGeneratorSettings> options, IEnumerable<IPulseSink> sinks, ILogger logger, bool resetOnStart = false)
     {
         Settings = options.Value;
         Sinks = sinks;
         Logger = logger;
         CanWriteFiles = true;
+        ResetOnStart = resetOnStart;
     }
 
     private async Task InitializeAsync()
     {
-        TryResetAnalogueTime(); 
+        TryResetAnalogueTime();
         foreach (var sink in Sinks) await sink.InitializeAsync();
         AnalogueClockTime = await InitializeAnalogueTime();
         Logger.LogInformation("Analogue time starting at {time}", AnalogueClockTime.AsTime());
@@ -48,15 +50,29 @@ public sealed class PulseGenerator : IAsyncDisposable
             }
             catch (IOException ex)
             {
-                Logger.LogError(ex, "Cannot delete file {file}", LastAnalogueTimeFileName);
+                Logger.LogError(ex, "Cannot reset analogue time because deletion of file '{file}' failed.", LastAnalogueTimeFileName);
             }
         }
     }
 
+    private async Task<TimeSpan> InitializeAnalogueTime()
+    {
+        var initialTime = Settings.AnalogueClockStartTime;
+        if (File.Exists(LastAnalogueTimeFileName))
+        {
+            var fileTime = await File.ReadAllTextAsync(LastAnalogueTimeFileName);
+            if (fileTime is not null && fileTime.Length == 5) initialTime = fileTime;
+
+        }
+        return initialTime.AsTimespan(Settings.Use12HourClock);
+    }
+
+
     public async Task Update(ClockStatus status)
     {
         if (!IsInitialized) await InitializeAsync();
-        if (status.IsUnavailable || status.IsRealtime || status.IsPaused) {
+        if (status.IsUnavailable || status.IsRealtime || status.IsPaused)
+        {
             foreach (var sink in Sinks.OfType<IStatusSink>()) await sink.ClockIsStoppedAsync();
             WasStopped = true;
             return;
@@ -118,22 +134,11 @@ public sealed class PulseGenerator : IAsyncDisposable
         catch (IOException ex)
         {
             CanWriteFiles = false;
-            Logger.LogError(ex,"Cannot write analogue time to {file}", LastAnalogueTimeFileName);
+            Logger.LogError(ex, "Cannot write analogue time to {file}", LastAnalogueTimeFileName);
         }
     }
 
-    private async Task<TimeSpan> InitializeAnalogueTime()
-    {
-        var initialTime = Settings.AnalogueClockStartTime;
-        if (File.Exists(LastAnalogueTimeFileName))
-        {
-            var fileTime = await File.ReadAllTextAsync(LastAnalogueTimeFileName);
-            if (fileTime is not null && fileTime.Length == 5) initialTime = fileTime;
 
-        }
-        return initialTime.AsTimespan(Settings.Use12HourClock);
-
-    }
 
     private async Task SetPositive()
     {

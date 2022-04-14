@@ -35,7 +35,7 @@ public class Worker : BackgroundService
         {
             sinks.Add(new RpiRelayBoardPulseSink(logger, settings.RpiRelayBoardPulseSink.UseRelay1AsClockStatus));
         }
-        PulseGenerator = new PulseGenerator(options, sinks, ResetOnStart, Logger);
+        PulseGenerator = new PulseGenerator(options, sinks,  Logger, ResetOnStart);
         Timer = new PeriodicTimer(TimeSpan.FromSeconds(PulseGenerator.PollIntervalSeconds));
     }
 
@@ -58,22 +58,35 @@ public class Worker : BackgroundService
         Logger.LogInformation("App version {version} started at {time}", Assembly.GetExecutingAssembly().GetName().Version, DateTimeOffset.Now);
         Logger.LogInformation("Settings: {settings}", PulseGenerator);
         Logger.LogInformation("Installed sinks: {sinks}", string.Join(", ", PulseGenerator.InstalledSinksTypes));
+
+        var HasError = false;
         while (await Timer.WaitForNextTickAsync(stoppingToken))
         {
             if (stoppingToken.IsCancellationRequested) break;
-
-            var response = await client.GetAsync(href, stoppingToken);
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var json = await response.Content.ReadAsStringAsync(stoppingToken);
-                var status = JsonSerializer.Deserialize<ClockStatus>(json, jsonOptions);
-                Logger.LogInformation("Time requested at: {time} {clock}", DateTimeOffset.Now, status?.Time);
-                if (status is not null) await PulseGenerator.Update(status);
+                if (HasError) await Task.Delay(PulseGenerator.ErrorWaitRetryMilliseconds, stoppingToken);
+                var response = await client.GetAsync(href, stoppingToken);
+                if (response.IsSuccessStatusCode)
+                {
+                    HasError = false;
+                    var json = await response.Content.ReadAsStringAsync(stoppingToken);
+                    var status = JsonSerializer.Deserialize<ClockStatus>(json, jsonOptions);
+                    Logger.LogInformation("Time requested at: {time} {clock}", DateTimeOffset.Now, status?.Time);
+                    if (status is not null) await PulseGenerator.Update(status);
+
+                }
+                else
+                {
+                    HasError = true;
+                    Logger.LogError("Error at: {time}. Responded with code {code}", DateTimeOffset.Now, response.StatusCode);
+                }
 
             }
-            else
+            catch (Exception ex)
             {
-                Logger.LogError("Error at: {time}. Responded with code {code}", DateTimeOffset.Now, response.StatusCode);
+                HasError= true;
+                Logger.LogError("Error at: {time}. Responded with code {message}", DateTimeOffset.Now, ex.Message);
             }
         }
     }

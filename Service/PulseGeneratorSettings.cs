@@ -10,6 +10,7 @@ public sealed class PulseGeneratorSettings
     public int PollIntervalSeconds { get; set; }
     public int PulseDurationMilliseconds { get; init; }
     public int FastForwardIntervalMilliseconds { get; init; }
+    public int ErrorWaitRetrySeconds { get; init; } = 60;
     public UdpBroadcastSettings UdpBroadcast { get; set; } = new ();
     public SerialPulseSinkSettings SerialPulseSink { get; init; } = new ();
     public RpiRelayBoardPulseSinkSettings RpiRelayBoardPulseSink { get; init ; } = new ();
