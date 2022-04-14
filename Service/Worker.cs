@@ -13,9 +13,11 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> Logger;
     private readonly PeriodicTimer Timer;
     private readonly PulseGenerator PulseGenerator;
+    private readonly bool ResetOnStart;
 
-    public Worker(IConfiguration configuration, ILogger<Worker> logger)
+    public Worker(string[] args, IConfiguration configuration, ILogger<Worker> logger)
     {
+        ResetOnStart = args.Contains("-r");
         Logger = logger;
         var options = GetOptions(configuration);
         var settings = options.Value;
@@ -33,7 +35,7 @@ public class Worker : BackgroundService
         {
             sinks.Add(new RpiRelayBoardPulseSink(logger, settings.RpiRelayBoardPulseSink.UseRelay1AsClockStatus));
         }
-        PulseGenerator = new PulseGenerator(options, sinks, Logger);
+        PulseGenerator = new PulseGenerator(options, sinks, ResetOnStart, Logger);
         Timer = new PeriodicTimer(TimeSpan.FromSeconds(PulseGenerator.PollIntervalSeconds));
     }
 

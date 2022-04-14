@@ -1,6 +1,6 @@
 ﻿namespace Tellurian.Trains.ClockPulseApp.Service;
 
-public sealed class LoggingPulseSink : IPulseSink
+public sealed class LoggingPulseSink : IPulseSink, IStatusSink
 {
     public LoggingPulseSink(ILogger logger) => Logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -25,13 +25,24 @@ public sealed class LoggingPulseSink : IPulseSink
 
     public Task InitializeAsync()
     {
-        Logger.LogInformation("{Timestamp:o} Started logging sink.", DateTimeOffset.Now);
+        Logger.LogInformation("{Timestamp:o} Initialized logging sink.", DateTimeOffset.Now);
         return Task.CompletedTask;
     }
 
     public Task CleanupAsync()
     {
-        Logger.LogInformation("{Timestamp:o} Stopped logging sink.", DateTimeOffset.Now);
+        Logger.LogInformation("{Timestamp:o} Cleaned up logging sink.", DateTimeOffset.Now);
+        return Task.CompletedTask;
+    }
+
+    public Task ClockIsStartedAsync()
+    {
+        Logger.LogInformation("{Timestamp:o} Clock was started.", DateTimeOffset.Now);
+        return Task.CompletedTask;
+    }
+    public Task ClockIsStoppedAsync()
+    {
+        Logger.LogInformation("{Timestamp:o} Clock was stopped.", DateTimeOffset.Now);
         return Task.CompletedTask;
     }
 }

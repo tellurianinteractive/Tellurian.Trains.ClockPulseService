@@ -11,6 +11,7 @@ public sealed class PulseGenerator : IAsyncDisposable
     private bool IsInitialized;
     private bool CanWriteFiles;
     private bool WasStopped;
+    private bool ResetOnStart;
 
     public TimeSpan CurrentTime { get; private set; }
     public TimeSpan AnalogueClockTime { get; private set; }
@@ -18,7 +19,7 @@ public sealed class PulseGenerator : IAsyncDisposable
     public int PollIntervalSeconds => Settings.PollIntervalSeconds;
 
     public IEnumerable<string> InstalledSinksTypes => Sinks.Select(s => s.GetType().Name);
-    public PulseGenerator(IOptions<PulseGeneratorSettings> options, IEnumerable<IPulseSink> sinks, ILogger logger)
+    public PulseGenerator(IOptions<PulseGeneratorSettings> options, IEnumerable<IPulseSink> sinks, bool resetOnStart, ILogger logger)
     {
         Settings = options.Value;
         Sinks = sinks;
@@ -28,10 +29,28 @@ public sealed class PulseGenerator : IAsyncDisposable
 
     private async Task InitializeAsync()
     {
+        TryResetAnalogueTime(); 
         foreach (var sink in Sinks) await sink.InitializeAsync();
         AnalogueClockTime = await InitializeAnalogueTime();
         Logger.LogInformation("Analogue time starting at {time}", AnalogueClockTime.AsTime());
         IsInitialized = true;
+    }
+
+    private void TryResetAnalogueTime()
+    {
+        if (ResetOnStart && File.Exists(LastAnalogueTimeFileName))
+        {
+            try
+            {
+                File.Delete(LastAnalogueTimeFileName);
+                Logger.LogInformation("Analogue time reset to {time)", Settings.AnalogueClockStartTime);
+
+            }
+            catch (IOException ex)
+            {
+                Logger.LogError(ex, "Cannot delete file {file}", LastAnalogueTimeFileName);
+            }
+        }
     }
 
     public async Task Update(ClockStatus status)
@@ -72,7 +91,7 @@ public sealed class PulseGenerator : IAsyncDisposable
             await MoveOneMinute();
             AnalogueClockTime = AnalogueClockTime.AddOneMinute(Settings.Use12HourClock);
             await SaveAnalogueTime();
-            Logger.LogInformation("\x1B[1m\x1B[33mFast forwarding analogue time: {time}\x1B[39m\x1B[22m", AnalogueClockTime.AsTime(Settings.Use12HourClock));
+            Logger.LogInformation("\x1B[1m\x1B[33mFast forwarding analogue time. Updated analogue time: {time}\x1B[39m\x1B[22m", AnalogueClockTime.AsTime(Settings.Use12HourClock));
         }
     }
 

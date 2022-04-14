@@ -3,10 +3,14 @@ using Tellurian.Trains.ClockPulseApp.Service;
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
-        services.AddHostedService<Worker>();
-        var configurationRoot = context.Configuration;
+        var configuration = context.Configuration;
+        var loggerFactory = LoggerFactory.Create(configure => {
+            configure.ClearProviders();
+            configure.AddConsole();
+        });
+        services.AddHostedService<Worker>(provider => new Worker(args, configuration, loggerFactory.CreateLogger<Worker>()));
         services.Configure<PulseGeneratorSettings>(
-            configurationRoot.GetSection(nameof(PulseGeneratorSettings)));
+            configuration.GetSection(nameof(PulseGeneratorSettings)));
 
     })            
     .Build();
