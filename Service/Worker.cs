@@ -17,7 +17,7 @@ public class Worker : BackgroundService
 
     public Worker(string[] args, IConfiguration configuration, ILogger<Worker> logger)
     {
-        ResetOnStart = args.Contains("-r");
+        ResetOnStart = args.Contains("-r", StringComparer.OrdinalIgnoreCase);
         Logger = logger;
         var options = GetOptions(configuration);
         var settings = options.Value;
@@ -74,7 +74,6 @@ public class Worker : BackgroundService
                     var status = JsonSerializer.Deserialize<ClockStatus>(json, jsonOptions);
                     Logger.LogInformation("Time requested at: {time} {clock}", DateTimeOffset.Now, status?.Time);
                     if (status is not null) await PulseGenerator.Update(status);
-
                 }
                 else
                 {

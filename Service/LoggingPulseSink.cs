@@ -37,12 +37,12 @@ public sealed class LoggingPulseSink : IPulseSink, IStatusSink
 
     public Task ClockIsStartedAsync()
     {
-        Logger.LogInformation("{Timestamp:o} Clock was started.", DateTimeOffset.Now);
+        Logger.LogInformation("{Timestamp:o} Clock was \x1B[1m\x1B[32mstarted\x1B[39m\x1B[22m.", DateTimeOffset.Now);
         return Task.CompletedTask;
     }
     public Task ClockIsStoppedAsync()
     {
-        Logger.LogInformation("{Timestamp:o} Clock was stopped.", DateTimeOffset.Now);
+        Logger.LogInformation("{Timestamp:o} Clock was \x1B[1m\x1B[31mstopped\x1B[39m\x1B[22m.", DateTimeOffset.Now);
         return Task.CompletedTask;
     }
 }

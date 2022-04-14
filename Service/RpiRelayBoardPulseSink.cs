@@ -14,18 +14,21 @@ public sealed class RpiRelayBoardPulseSink : IPulseSink, IStatusSink, IDisposabl
     private const int GeneralPulsePin = 26;
     private const int PositivePulsePin = 20;
     private const int NegativePulsePin = 21;
+
     public Task NegativeVoltageAsync()
     {
         if (!UseRelay1AsClockStatus) Controller.Write(GeneralPulsePin, PinValue.Low);
         Controller.Write(NegativePulsePin, PinValue.Low);
         return Task.CompletedTask;
     }
+
     public Task PositiveVoltageAsync()
     {
         if (!UseRelay1AsClockStatus) Controller.Write(GeneralPulsePin, PinValue.Low);
         Controller.Write(PositivePulsePin, PinValue.Low);
         return Task.CompletedTask;
     }
+
     public Task ZeroVoltageAsync()
     {
         if (!UseRelay1AsClockStatus) Controller.Write(GeneralPulsePin, PinValue.High);
@@ -33,6 +36,7 @@ public sealed class RpiRelayBoardPulseSink : IPulseSink, IStatusSink, IDisposabl
         Controller.Write(NegativePulsePin, PinValue.High);
         return Task.CompletedTask;
     }
+
     public Task InitializeAsync()
     {
         try
@@ -49,6 +53,7 @@ public sealed class RpiRelayBoardPulseSink : IPulseSink, IStatusSink, IDisposabl
         }
         return Task.CompletedTask;
     }
+
     public async Task CleanupAsync()
     {
         await ZeroVoltageAsync();
@@ -58,7 +63,6 @@ public sealed class RpiRelayBoardPulseSink : IPulseSink, IStatusSink, IDisposabl
         Logger.LogInformation("Stopped {sink}", nameof(RpiRelayBoardPulseSink));
     }
 
-    public void Dispose() => Controller.Dispose();
     public Task ClockIsStartedAsync()
     {
         if (UseRelay1AsClockStatus)
@@ -67,6 +71,7 @@ public sealed class RpiRelayBoardPulseSink : IPulseSink, IStatusSink, IDisposabl
         }
         return Task.CompletedTask;
     }
+
     public Task ClockIsStoppedAsync()
     {
         if (UseRelay1AsClockStatus)
@@ -75,4 +80,6 @@ public sealed class RpiRelayBoardPulseSink : IPulseSink, IStatusSink, IDisposabl
         }
         return Task.CompletedTask;
     }
+
+    public void Dispose() => Controller.Dispose();
 }

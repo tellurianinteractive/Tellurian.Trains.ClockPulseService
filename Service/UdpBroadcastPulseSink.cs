@@ -3,12 +3,6 @@ using System.Net.Sockets;
 
 namespace Tellurian.Trains.ClockPulseApp.Service;
 
-/// <summary>
-/// Broadcast clock pulsing as UDP messages. 
-/// ASCII + is sent when a positive voltage should be set.
-/// ASCII - is sent when a negative voltage should be set.
-/// ASCII space is sent when a zero voltage should be set.
-/// </summary>
 public sealed class UdpBroadcastPulseSink : IPulseSink, IDisposable
 {
     private readonly ILogger Logger;
