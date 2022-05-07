@@ -17,8 +17,10 @@ public sealed class UdpBroadcastPulseSink : IPulseSink, IDisposable
     {
         Logger = logger;
         BroadcastEndpoint = broadcastEndpoint;
-        Broadcaster = new();
-        Broadcaster.EnableBroadcast = true;       
+        Broadcaster = new()
+        {
+            EnableBroadcast = true
+        };
     }
 
     public async Task NegativeVoltageAsync() => await Broadcaster.SendAsync(Negative, 1, BroadcastEndpoint);

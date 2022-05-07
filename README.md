@@ -5,9 +5,12 @@ and creates logical pulses to drive analogue clocks.**
 
 > If your clock is not a pulse-driven 12-hour clock, then my software is not the right solution. 
 The alternative is to call the clock API and getting the time. 
-### News
-Latest release is 1.3.2
+
+
+
+Release 1.3.1 to 1.3.3 at 2022-05-07 solves the following problems:
 - **Fix** of issue #1 *Handle when clock server is not available*.
+- **Fix** of syncing analoguge clock stopping one minute too early.
 
 Release 1.3.0 at 2022-03-31 adds the following:
 - **Monitoring of clock running or not** through the new sink type *IStatusSink*. 

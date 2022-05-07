@@ -18,9 +18,11 @@ public sealed class SerialPortPulseSink : IPulseSink, IDisposable
         UseDtrOnly = useDtrOnly;
         try
         {
-            Port = new(portName);
-            Port.RtsEnable = false;
-            Port.DtrEnable = false;
+            Port = new(portName)
+            {
+                RtsEnable = false,
+                DtrEnable = false
+            };
         }
         catch (IOException ex)
         {

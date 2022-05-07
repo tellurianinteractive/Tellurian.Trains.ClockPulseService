@@ -61,8 +61,8 @@ public sealed class PulseGenerator : IAsyncDisposable
         if (File.Exists(LastAnalogueTimeFileName))
         {
             var fileTime = await File.ReadAllTextAsync(LastAnalogueTimeFileName);
-            if (fileTime is not null && fileTime.Length == 5) initialTime = fileTime;
-
+            if (fileTime is not null && fileTime.Length >= 5) initialTime = fileTime[..5];
+            else Logger.LogWarning($"Cannot read {LastAnalogueTimeFileName}.");
         }
         return initialTime.AsTimespan(Settings.Use12HourClock);
     }
@@ -100,15 +100,23 @@ public sealed class PulseGenerator : IAsyncDisposable
 
     private async Task FastForward()
     {
+        //TODO: Inform ClockServer that analogue clock is syncing and stop clock.
         using PeriodicTimer fastTimer = new(TimeSpan.FromMilliseconds(Settings.FastForwardIntervalMilliseconds));
         while (AnalogueClockTime != CurrentTime)
         {
             await fastTimer.WaitForNextTickAsync();
-            await MoveOneMinute();
+            await FastForwardOneMinute();
             AnalogueClockTime = AnalogueClockTime.AddOneMinute(Settings.Use12HourClock);
-            await SaveAnalogueTime();
-            Logger.LogInformation("\x1B[1m\x1B[33mFast forwarding analogue time. Updated analogue time: {time}\x1B[39m\x1B[22m", AnalogueClockTime.AsTime(Settings.Use12HourClock));
         }
+        await fastTimer.WaitForNextTickAsync();
+        await FastForwardOneMinute();
+    }
+
+    private async Task FastForwardOneMinute()
+    {
+        await MoveOneMinute();
+        await SaveAnalogueTime();
+        Logger.LogInformation("\x1B[1m\x1B[33mFast forwarding analogue time. Updated analogue time: {time}\x1B[39m\x1B[22m", AnalogueClockTime.AsTime(Settings.Use12HourClock));
     }
 
     private async Task MoveOneMinute()
@@ -120,6 +128,7 @@ public sealed class PulseGenerator : IAsyncDisposable
 
         await Task.Delay(Settings.PulseDurationMilliseconds);
         await SetZero();
+        await Task.Delay(Settings.FastForwardIntervalMilliseconds - Settings.PulseDurationMilliseconds);
     }
 
     private const string LastAnalogueTimeFileName = "AnalogueTime.txt";
