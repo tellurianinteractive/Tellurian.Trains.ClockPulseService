@@ -1,17 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<RootNamespace>Tellurian.Trains.ClockPulseApp.Service.Tests</RootNamespace>
 		<AssemblyName>Tellurian.Trains.ClockPulseApp.Service.Tests</AssemblyName>
-		<Version>1.3.0</Version>
-		<Company>Tellurian Interactive AB</Company>
-		<Product>Tellurian Module Meeting App</Product>
-		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-		<NeutralLanguage>en-GB</NeutralLanguage>
-		<Nullable>enable</Nullable>
-		<ImplicitUsings>enable</ImplicitUsings>
-
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 

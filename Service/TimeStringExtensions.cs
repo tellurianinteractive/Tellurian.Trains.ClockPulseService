@@ -24,8 +24,15 @@ public static class TimeStringExtensions
         time.Add(TimeSpan.FromMinutes(1));
 
     public static bool IsOneMinuteAfter(this TimeSpan time, TimeSpan other, bool is12Hour = false) =>
+        IsMinutesAfter(time, other, 1, is12Hour);
+
+    public static bool IsTwoMinuteAfter(this TimeSpan time, TimeSpan other, bool is12Hour = false) =>
+       IsMinutesAfter(time, other, 2, is12Hour);
+    public static bool IsEqualTo(this TimeSpan time, TimeSpan other, bool is12Hour = false) =>
+      IsMinutesAfter(time, other, 0, is12Hour);
+    private static bool IsMinutesAfter(this TimeSpan time, TimeSpan other, int minutes, bool is12Hour = false) =>
         (is12Hour && time.Hours == 12 && time.Minutes == 59 && other.Hours == 1 && other.Minutes == 0) ||
         (time.Hours == 23 && time.Minutes == 59 && other.Hours == 0 && other.Minutes == 0) ||
-        (other - time).TotalMinutes == 1;
+        (other - time).TotalMinutes == minutes;
 
 }

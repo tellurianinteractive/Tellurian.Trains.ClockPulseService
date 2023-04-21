@@ -3,47 +3,47 @@
 namespace Tellurian.Trains.ClockPulseApp.Service;
 public sealed class RpiRelayBoardPulseSink : IPulseSink, IStatusSink, IDisposable
 {
-    public RpiRelayBoardPulseSink(ILogger logger, bool useRelay1AsClockStatus = false)
+    public RpiRelayBoardPulseSink(ILogger logger)
     {
         Logger = logger;
-        UseRelay1AsClockStatus = useRelay1AsClockStatus;
     }
     private readonly ILogger Logger;
-    private readonly bool UseRelay1AsClockStatus;
     private readonly GpioController Controller = new();
-    private const int GeneralPulsePin = 26;
-    private const int PositivePulsePin = 20;
-    private const int NegativePulsePin = 21;
 
-    public Task NegativeVoltageAsync()
+    private const int VoltageOnPin = 26;
+    private const int PositivePin = 20;
+    private const int NegativePin = 21;
+
+    public async Task NegativeVoltageAsync()
     {
-        if (!UseRelay1AsClockStatus) Controller.Write(GeneralPulsePin, PinValue.Low);
-        Controller.Write(NegativePulsePin, PinValue.Low);
-        return Task.CompletedTask;
+        Controller.Write(PositivePin, PinValue.Low);
+        Controller.Write(NegativePin, PinValue.Low);
+        await Task.Delay(100);
+        Controller.Write(VoltageOnPin, PinValue.Low);
     }
 
-    public Task PositiveVoltageAsync()
+    public async Task PositiveVoltageAsync()
     {
-        if (!UseRelay1AsClockStatus) Controller.Write(GeneralPulsePin, PinValue.Low);
-        Controller.Write(PositivePulsePin, PinValue.Low);
-        return Task.CompletedTask;
+        Controller.Write(PositivePin, PinValue.High);
+        Controller.Write(NegativePin, PinValue.High);
+        await Task.Delay(100);
+        Controller.Write(VoltageOnPin, PinValue.Low);
     }
 
     public Task ZeroVoltageAsync()
     {
-        if (!UseRelay1AsClockStatus) Controller.Write(GeneralPulsePin, PinValue.High);
-        Controller.Write(PositivePulsePin, PinValue.High);
-        Controller.Write(NegativePulsePin, PinValue.High);
+        Controller.Write(VoltageOnPin, PinValue.High);
         return Task.CompletedTask;
     }
 
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
         try
         {
-            Controller.OpenPin(GeneralPulsePin, PinMode.Output, PinValue.High);
-            Controller.OpenPin(PositivePulsePin, PinMode.Output, PinValue.High);
-            Controller.OpenPin(NegativePulsePin, PinMode.Output, PinValue.High);
+            Controller.OpenPin(VoltageOnPin, PinMode.Output, PinValue.High);
+            await Task.Delay(100);
+            Controller.OpenPin(PositivePin, PinMode.Output, PinValue.High);
+            Controller.OpenPin(NegativePin, PinMode.Output, PinValue.High);
             Logger.LogInformation("Started {sink}", nameof(RpiRelayBoardPulseSink));
 
         }
@@ -51,33 +51,24 @@ public sealed class RpiRelayBoardPulseSink : IPulseSink, IStatusSink, IDisposabl
         {
             Logger.LogError(ex, "Error when starting {sink}", nameof(RpiRelayBoardPulseSink));
         }
-        return Task.CompletedTask;
     }
 
     public async Task CleanupAsync()
     {
         await ZeroVoltageAsync();
-        Controller.ClosePin(GeneralPulsePin);
-        Controller.ClosePin(PositivePulsePin);
-        Controller.ClosePin(NegativePulsePin);
+        Controller.ClosePin(VoltageOnPin);
+        Controller.ClosePin(PositivePin);
+        Controller.ClosePin(NegativePin);
         Logger.LogInformation("Stopped {sink}", nameof(RpiRelayBoardPulseSink));
     }
 
     public Task ClockIsStartedAsync()
     {
-        if (UseRelay1AsClockStatus)
-        {
-            Controller.Write(GeneralPulsePin, PinValue.High);
-        }
         return Task.CompletedTask;
     }
 
     public Task ClockIsStoppedAsync()
     {
-        if (UseRelay1AsClockStatus)
-        {
-            Controller.Write(GeneralPulsePin, PinValue.Low);
-        }
         return Task.CompletedTask;
     }
 

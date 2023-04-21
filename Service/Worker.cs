@@ -15,7 +15,7 @@ public class Worker : BackgroundService
     private readonly PulseGenerator PulseGenerator;
     private readonly bool ResetOnStart;
 
-    public Worker(string[] args, IConfiguration configuration, ILogger<Worker> logger)
+    public Worker(string[] args, IConfiguration configuration,IHostEnvironment environment, ILogger<Worker> logger)
     {
         ResetOnStart = args.Contains("-r", StringComparer.OrdinalIgnoreCase);
         Logger = logger;
@@ -31,11 +31,15 @@ public class Worker : BackgroundService
         {
             sinks.Add(new UdpBroadcastPulseSink(new IPEndPoint(iPAddress, settings.UdpBroadcast.PortNumber), logger));
         }
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        if (!settings.RpiRelayBoardPulseSink.Disabled && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            sinks.Add(new RpiRelayBoardPulseSink(logger, settings.RpiRelayBoardPulseSink.UseRelay1AsClockStatus));
+            sinks.Add(new RpiRelayBoardPulseSink(logger));
         }
-        PulseGenerator = new PulseGenerator(options, sinks,  Logger, ResetOnStart);
+        if (environment.IsDevelopment())
+        {
+            sinks.Add(new AnalogueClockSimulationPulseSink(settings.AnalogueClockStartTime.AsTimespan(), logger));
+        }
+        PulseGenerator = new PulseGenerator(options, sinks, Logger, ResetOnStart);
         Timer = new PeriodicTimer(TimeSpan.FromSeconds(PulseGenerator.PollIntervalSeconds));
     }
 
@@ -48,6 +52,10 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        Logger.LogInformation("App version {version} started at {time}", Assembly.GetExecutingAssembly().GetName().Version, DateTimeOffset.Now);
+        Logger.LogInformation("Settings: {settings}", PulseGenerator);
+        Logger.LogInformation("Installed sinks: {sinks}", string.Join(", ", PulseGenerator.InstalledSinksTypes));
+        //return Task.CompletedTask;
         var jsonOptions = new JsonSerializerOptions
         {
             AllowTrailingCommas = true,
@@ -55,9 +63,6 @@ public class Worker : BackgroundService
         };
         using var client = new HttpClient();
         var href = PulseGenerator.RemoteClockTimeHref;
-        Logger.LogInformation("App version {version} started at {time}", Assembly.GetExecutingAssembly().GetName().Version, DateTimeOffset.Now);
-        Logger.LogInformation("Settings: {settings}", PulseGenerator);
-        Logger.LogInformation("Installed sinks: {sinks}", string.Join(", ", PulseGenerator.InstalledSinksTypes));
 
         var HasError = false;
         while (await Timer.WaitForNextTickAsync(stoppingToken))
@@ -72,25 +77,24 @@ public class Worker : BackgroundService
                     HasError = false;
                     var json = await response.Content.ReadAsStringAsync(stoppingToken);
                     var status = JsonSerializer.Deserialize<ClockStatus>(json, jsonOptions);
-                    Logger.LogInformation("Time requested at: {time} {clock}", DateTimeOffset.Now, status?.Time);
+                    Logger.LogInformation("Time requested at: {time} with clock time {clock}", DateTimeOffset.Now, status?.Time);
                     if (status is not null) await PulseGenerator.Update(status);
                 }
                 else
                 {
                     HasError = true;
-                    Logger.LogError("Error at: {time}. Responded with code {code}", DateTimeOffset.Now, response.StatusCode);
+                    Logger.LogError("Error at: {time}. Responded with code {code}", DateTimeOffset.Now, response.StatusCode.ToString());
                 }
-
             }
             catch (Exception ex)
             {
-                HasError= true;
-                Logger.LogError("Error at: {time}. Responded with code {message}", DateTimeOffset.Now, ex.Message);
+                HasError = true;
+                Logger.LogError("Error at: {time}. Reason: {message}", DateTimeOffset.Now, ex.Message);
             }
         }
     }
 
-    public override async Task StopAsync(CancellationToken cancellationToken)
+    public override async Task StopAsync(CancellationToken stoppingToken)
     {
         Logger.LogInformation("Stopping service...");
         Timer.Dispose();

@@ -1,0 +1,13 @@
+<Project>
+	<PropertyGroup>
+		<Version>1.5.0</Version>
+		<Company>Tellurian Interactive AB</Company>
+		<Product>Tellurian Module Meeting App</Product>
+		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+		<NeutralLanguage>en-GB</NeutralLanguage>
+	</PropertyGroup>
+	<PropertyGroup>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+</Project>

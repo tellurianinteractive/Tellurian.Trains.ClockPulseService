@@ -1,17 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<RootNamespace>Tellurian.Trains.ClockPulseApp.Service</RootNamespace>
 		<AssemblyName>Tellurian.Trains.ClockPulseApp.Service</AssemblyName>
-		<RuntimeIdentifier>linux-arm</RuntimeIdentifier>
-		<Version>1.3.3</Version>
-		<Company>Tellurian Interactive AB</Company>
-		<Product>Tellurian Module Meeting App</Product>
-		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-		<NeutralLanguage>en-GB</NeutralLanguage>
-		<Nullable>enable</Nullable>
-		<ImplicitUsings>enable</ImplicitUsings>
 		<UserSecretsId>dotnet-Service-32E57495-7D30-4F2C-9B1D-C42CC55595EC</UserSecretsId>
 	</PropertyGroup>
 

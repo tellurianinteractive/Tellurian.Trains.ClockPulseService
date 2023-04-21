@@ -60,13 +60,13 @@ public class PulseGeneratorTests
     }
 
     public static PulseGenerator CreateTargetWithSink(IPulseSink sink) =>
-        new(Options.Create(Settings), new[] { sink, new LoggingPulseSink(NullLogger.Instance) }, NullLogger.Instance);
+        new(Options.Create(Settings), new[] { sink, new LoggingPulseSink(NullLogger.Instance) }, NullLogger.Instance, true);
 
     internal class FailingPulseSink : IPulseSink
     {
-        public Task NegativeVoltageAsync() => throw new NotImplementedException();
-        public Task PositiveVoltageAsync() => throw new NotImplementedException();
-        public Task ZeroVoltageAsync() => throw new NotImplementedException();
+        public Task NegativeVoltageAsync() { Assert.Fail("Negative"); return Task.CompletedTask; }
+        public Task PositiveVoltageAsync() { Assert.Fail("Positive"); return Task.CompletedTask; }
+        public Task ZeroVoltageAsync() { Assert.Fail("Zero"); return Task.CompletedTask; }
         public Task InitializeAsync() => Task.CompletedTask;
         public Task CleanupAsync() => Task.CompletedTask;
     }

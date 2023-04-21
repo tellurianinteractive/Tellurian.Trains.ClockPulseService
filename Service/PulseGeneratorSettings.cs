@@ -7,6 +7,7 @@ public sealed class PulseGeneratorSettings
     public string RemoteClockTimeHref { get; set; } = string.Empty;
     public string AnalogueClockStartTime { get; set; } = "06:00";
     public bool Use12HourClock { get; set; } = false;
+    public bool FlipPolarity { get; set; } = false;
     public int PollIntervalSeconds { get; set; }
     public int PulseDurationMilliseconds { get; init; }
     public int FastForwardIntervalMilliseconds { get; init; }
@@ -30,16 +31,16 @@ public sealed class PulseGeneratorSettings
 
 public sealed class UdpBroadcastSettings
 {
+    public bool Disabled { get; set; } = true;
     public string IPAddress { get; set; } = string.Empty;
     public int PortNumber { get; set; }
-    public bool Disabled { get; set; } = true;
 }
 
 public sealed class SerialPulseSinkSettings
 {
+    public bool Disabled { get; set; } = true;
     public string PortName { get; set; } = string.Empty;
     public bool DtrOnly { get; set; } = false;
-    public bool Disabled { get; set; } = true;
 
     public override string ToString() => 
         PortName.IsValidSerialPortName() ? $"Serial pulse sink: {PortName} with DTR-only: {DtrOnly} " : string.Empty;
@@ -47,13 +48,8 @@ public sealed class SerialPulseSinkSettings
 
 public sealed class RpiRelayBoardPulseSinkSettings
 {
-    public bool UseRelay1AsClockStatus { get; set; } = false;
-}
-
-public static class SerialPulseSinkExtensions
-{
-    public static bool IsValidSerialPortName(this string? name) =>
-        !string.IsNullOrWhiteSpace(name) && name.ToUpperInvariant().StartsWith("COM");
+    public bool Disabled { get; set; } = true;
+    public override string ToString() => "RPI Relay Board: no specific setting";
 }
 
 

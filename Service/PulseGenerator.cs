@@ -8,16 +8,18 @@ public sealed class PulseGenerator : IAsyncDisposable
     private readonly ILogger Logger;
     private readonly PulseGeneratorSettings Settings;
     private readonly IEnumerable<IPulseSink> Sinks;
+    private readonly bool ResetOnStart;
     private bool IsInitialized;
     private bool CanWriteFiles;
-    private bool WasStopped;
-    private readonly bool ResetOnStart;
 
     public TimeSpan CurrentTime { get; private set; }
     public TimeSpan AnalogueClockTime { get; private set; }
     public string RemoteClockTimeHref => Settings.RemoteClockTimeHref;
     public int PollIntervalSeconds => Settings.PollIntervalSeconds;
     public int ErrorWaitRetryMilliseconds => Settings.ErrorWaitRetrySeconds * 60;
+    private int ZeroMilliseconds => Settings.FastForwardIntervalMilliseconds - Settings.PulseDurationMilliseconds;
+
+    private ClockStatus? Previous;
 
     public IEnumerable<string> InstalledSinksTypes => Sinks.Select(s => s.GetType().Name);
     public PulseGenerator(IOptions<PulseGeneratorSettings> options, IEnumerable<IPulseSink> sinks, ILogger logger, bool resetOnStart = false)
@@ -62,7 +64,7 @@ public sealed class PulseGenerator : IAsyncDisposable
         {
             var fileTime = await File.ReadAllTextAsync(LastAnalogueTimeFileName);
             if (fileTime is not null && fileTime.Length >= 5) initialTime = fileTime[..5];
-            else Logger.LogWarning($"Cannot read {LastAnalogueTimeFileName}.");
+            else Logger.LogWarning("Cannot interpret time in file {file}", LastAnalogueTimeFileName);
         }
         return initialTime.AsTimespan(Settings.Use12HourClock);
     }
@@ -71,16 +73,34 @@ public sealed class PulseGenerator : IAsyncDisposable
     public async Task Update(ClockStatus status)
     {
         if (!IsInitialized) await InitializeAsync();
-        if (status.IsUnavailable || status.IsRealtime || status.IsPaused)
+        if (status.WasStopped(Previous))
         {
-            foreach (var sink in Sinks.OfType<IStatusSink>()) await sink.ClockIsStoppedAsync();
-            WasStopped = true;
+            Previous = status;
+            foreach (var sink in Sinks.OfType<IStatusSink>())
+            {
+                try
+                {
+                    await sink.ClockIsStoppedAsync();
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Sink {sink} faulted when stopping.", sink.GetType().Name);
+                }
+            }
             return;
         }
-        if (WasStopped)
+        else if (status.WasStarted(Previous))
         {
-            foreach (var sink in Sinks.OfType<IStatusSink>()) await sink.ClockIsStartedAsync();
-            WasStopped = false;
+            Previous = status;
+            foreach (var sink in Sinks.OfType<IStatusSink>())
+                try
+                {
+                    await sink.ClockIsStartedAsync();
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Sink {sink} faulted when starting.", sink.GetType().Name);
+                }
         }
         CurrentTime = status.Time.AsTimespan(Settings.Use12HourClock);
         if (CurrentTime == AnalogueClockTime) return;
@@ -100,35 +120,32 @@ public sealed class PulseGenerator : IAsyncDisposable
 
     private async Task FastForward()
     {
-        //TODO: Inform ClockServer that analogue clock is syncing and stop clock.
         using PeriodicTimer fastTimer = new(TimeSpan.FromMilliseconds(Settings.FastForwardIntervalMilliseconds));
-        while (AnalogueClockTime != CurrentTime)
+        while (!AnalogueClockTime.IsEqualTo(CurrentTime, Settings.Use12HourClock))
         {
             await fastTimer.WaitForNextTickAsync();
             await FastForwardOneMinute();
-            AnalogueClockTime = AnalogueClockTime.AddOneMinute(Settings.Use12HourClock);
         }
-        await fastTimer.WaitForNextTickAsync();
-        await FastForwardOneMinute();
     }
 
     private async Task FastForwardOneMinute()
     {
         await MoveOneMinute();
         await SaveAnalogueTime();
+        AnalogueClockTime = AnalogueClockTime.AddOneMinute(Settings.Use12HourClock);
         Logger.LogInformation("\x1B[1m\x1B[33mFast forwarding analogue time. Updated analogue time: {time}\x1B[39m\x1B[22m", AnalogueClockTime.AsTime(Settings.Use12HourClock));
     }
 
     private async Task MoveOneMinute()
     {
         if (AnalogueClockTime.Minutes % 2 == 0)
-            await SetNegative();
+            if (Settings.FlipPolarity) await SetPositive(); else await SetNegative();
         else
-            await SetPositive();
+            if (Settings.FlipPolarity) await SetNegative(); else await SetPositive();
 
         await Task.Delay(Settings.PulseDurationMilliseconds);
         await SetZero();
-        await Task.Delay(Settings.FastForwardIntervalMilliseconds - Settings.PulseDurationMilliseconds);
+        await Task.Delay(ZeroMilliseconds);
     }
 
     private const string LastAnalogueTimeFileName = "AnalogueTime.txt";
@@ -147,19 +164,48 @@ public sealed class PulseGenerator : IAsyncDisposable
         }
     }
 
-
-
     private async Task SetPositive()
     {
-        foreach (var sink in Sinks) await sink.PositiveVoltageAsync();
+        foreach (var sink in Sinks)
+        {
+            try
+            {
+                await sink.PositiveVoltageAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Sink {sink} faulted when set positive.", sink.GetType().Name);
+            }
+        }
     }
     private async Task SetNegative()
     {
-        foreach (var sink in Sinks) await sink.NegativeVoltageAsync();
+        foreach (var sink in Sinks)
+        {
+            try
+            {
+                await sink.NegativeVoltageAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Sink {sink} faulted when set negative.", sink.GetType().Name);
+            }
+        }
     }
     private async Task SetZero()
     {
-        foreach (var sink in Sinks) await sink.ZeroVoltageAsync();
+        foreach (var sink in Sinks)
+        {
+            try
+            {
+                await sink.ZeroVoltageAsync();
+
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Sink {sink} faulted when set zero.", sink.GetType().Name);
+            }
+        }
     }
 
     public async ValueTask DisposeAsync()

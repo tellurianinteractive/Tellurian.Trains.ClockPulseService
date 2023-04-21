@@ -8,7 +8,7 @@ IHost host = Host.CreateDefaultBuilder(args)
             configure.ClearProviders();
             configure.AddConsole();
         });
-        services.AddHostedService<Worker>(provider => new Worker(args, configuration, loggerFactory.CreateLogger<Worker>()));
+        services.AddHostedService<Worker>(provider => new Worker(args, configuration, context.HostingEnvironment, loggerFactory.CreateLogger<Worker>()));
         services.Configure<PulseGeneratorSettings>(
             configuration.GetSection(nameof(PulseGeneratorSettings)));
 

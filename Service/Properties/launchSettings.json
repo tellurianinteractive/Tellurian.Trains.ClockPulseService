@@ -1,11 +1,12 @@
-﻿{
+{
   "profiles": {
     "Service": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
+      "commandLineArgs": "-r",
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
-      }
+      },
+      "dotnetRunMessages": true
     }
   }
 }
