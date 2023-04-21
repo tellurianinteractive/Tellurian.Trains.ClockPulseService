@@ -22,9 +22,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
-		<PackageReference Include="System.Device.Gpio" Version="2.1.0" />
-		<PackageReference Include="System.IO.Ports" Version="6.0.0" />
-		<PackageReference Include="Tellurian.Trains.MeetingApp.Contracts" Version="3.2.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+		<PackageReference Include="System.Device.Gpio" Version="2.2.0" />
+		<PackageReference Include="System.IO.Ports" Version="7.0.0" />
+		<PackageReference Include="Tellurian.Trains.MeetingApp.Contracts" Version="3.2.21" />
 	</ItemGroup>
 </Project>
