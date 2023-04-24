@@ -60,7 +60,7 @@ public class PulseGeneratorTests
     }
 
     public static PulseGenerator CreateTargetWithSink(IPulseSink sink) =>
-        new(Options.Create(Settings), new[] { sink, new LoggingPulseSink(NullLogger.Instance) }, NullLogger.Instance, true);
+        new(Settings, new[] { sink, new LoggingPulseSink(NullLogger.Instance) }, NullLogger.Instance, true);
 
     internal class FailingPulseSink : IPulseSink
     {

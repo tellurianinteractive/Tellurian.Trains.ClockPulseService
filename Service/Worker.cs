@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Options;
 using System.IO.Ports;
 using System.Net;
 using System.Reflection;
@@ -15,14 +14,16 @@ public class Worker : BackgroundService
     private readonly PulseGenerator PulseGenerator;
     private readonly bool ResetOnStart;
 
-    public Worker(string[] args, IConfiguration configuration,IHostEnvironment environment, ILogger<Worker> logger)
+    public Worker(string[] args, IConfiguration configuration, IHostEnvironment environment, ILogger<Worker> logger)
     {
         ResetOnStart = args.Contains("-r", StringComparer.OrdinalIgnoreCase);
         Logger = logger;
-        var options = GetOptions(configuration);
-        var settings = options.Value;
-        var sinks = new List<IPulseSink>() { new LoggingPulseSink(Logger) };
-
+        var settings = GetSettings(configuration);
+        ArgumentNullException.ThrowIfNull(settings);
+        var sinks = new List<IPulseSink>()
+        {
+            new LoggingPulseSink(Logger) 
+        };
         if (!settings.SerialPulseSink.Disabled && SerialPort.GetPortNames().Contains(settings.SerialPulseSink.PortName))
         {
             sinks.Add(new SerialPortPulseSink(settings.SerialPulseSink.PortName, Logger, settings.SerialPulseSink.DtrOnly));
@@ -39,16 +40,13 @@ public class Worker : BackgroundService
         {
             sinks.Add(new AnalogueClockSimulationPulseSink(settings.AnalogueClockStartTime.AsTimespan(), logger));
         }
-        PulseGenerator = new PulseGenerator(options, sinks, Logger, ResetOnStart);
+        PulseGenerator = new PulseGenerator(settings, sinks, Logger, ResetOnStart);
         Timer = new PeriodicTimer(TimeSpan.FromSeconds(PulseGenerator.PollIntervalSeconds));
     }
 
-    private IOptions<PulseGeneratorSettings> GetOptions(IConfiguration configuration)
-    {
-        var settings = configuration.GetSection(nameof(PulseGeneratorSettings))
+    private PulseGeneratorSettings? GetSettings(IConfiguration configuration) =>
+        configuration.GetSection(nameof(PulseGeneratorSettings))
              .Get<PulseGeneratorSettings>();
-        return Options.Create(settings);
-    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

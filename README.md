@@ -7,8 +7,10 @@ and creates logical pulses to drive analogue clocks.**
 The alternative is to call the clock API and getting the time. 
 
 ## Release Notes
-Release 1.5.0 at 2023-04-21:
+Release 1.5.1 at 2023-04-24:
 - **RPI Relay Board** sink implementation changed to eliminate need of extra relays.
+  - Relay 1 is now *voltage on* and is acitvated for each pulse.
+  - Relay 2 and 3 controls *polarity* and feeds the RUT clocks.
 
 Release 1.4.0 at 2022-07-22 adds the following:
 - **Improved analouge clock synchronisation** with the option to flip polarity in *appsettings.json*.

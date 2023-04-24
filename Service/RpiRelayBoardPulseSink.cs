@@ -3,6 +3,7 @@
 namespace Tellurian.Trains.ClockPulseApp.Service;
 public sealed class RpiRelayBoardPulseSink : IPulseSink, IStatusSink, IDisposable
 {
+    const int VoltagePinDelay = 250; // milliseconds
     public RpiRelayBoardPulseSink(ILogger logger)
     {
         Logger = logger;
@@ -16,23 +17,33 @@ public sealed class RpiRelayBoardPulseSink : IPulseSink, IStatusSink, IDisposabl
 
     public async Task NegativeVoltageAsync()
     {
-        Controller.Write(PositivePin, PinValue.Low);
-        Controller.Write(NegativePin, PinValue.Low);
-        await Task.Delay(100);
-        Controller.Write(VoltageOnPin, PinValue.Low);
+        if (ArePinsOpen)
+        {
+            Controller.Write(PositivePin, PinValue.Low);
+            Controller.Write(NegativePin, PinValue.Low);
+            await Task.Delay(VoltagePinDelay);
+            Controller.Write(VoltageOnPin, PinValue.Low);
+        }
+
     }
 
     public async Task PositiveVoltageAsync()
     {
-        Controller.Write(PositivePin, PinValue.High);
-        Controller.Write(NegativePin, PinValue.High);
-        await Task.Delay(100);
-        Controller.Write(VoltageOnPin, PinValue.Low);
+        if (ArePinsOpen)
+        {
+            Controller.Write(PositivePin, PinValue.High);
+            Controller.Write(NegativePin, PinValue.High);
+            await Task.Delay(VoltagePinDelay);
+            Controller.Write(VoltageOnPin, PinValue.Low);
+        }
     }
 
     public Task ZeroVoltageAsync()
     {
-        Controller.Write(VoltageOnPin, PinValue.High);
+        if (ArePinsOpen)
+        {
+            Controller.Write(VoltageOnPin, PinValue.High);
+        }
         return Task.CompletedTask;
     }
 
@@ -41,7 +52,7 @@ public sealed class RpiRelayBoardPulseSink : IPulseSink, IStatusSink, IDisposabl
         try
         {
             Controller.OpenPin(VoltageOnPin, PinMode.Output, PinValue.High);
-            await Task.Delay(100);
+            await Task.Delay(VoltagePinDelay);
             Controller.OpenPin(PositivePin, PinMode.Output, PinValue.High);
             Controller.OpenPin(NegativePin, PinMode.Output, PinValue.High);
             Logger.LogInformation("Started {sink}", nameof(RpiRelayBoardPulseSink));
@@ -72,5 +83,13 @@ public sealed class RpiRelayBoardPulseSink : IPulseSink, IStatusSink, IDisposabl
         return Task.CompletedTask;
     }
 
-    public void Dispose() => Controller.Dispose();
+    bool IsDisposed = false;
+    public void Dispose()
+    {
+        IsDisposed = true;
+        Controller.Dispose();
+    }
+
+    private bool ArePinsOpen =>
+        !IsDisposed && Controller.IsPinOpen(VoltageOnPin) && Controller.IsPinOpen(PositivePin) && Controller.IsPinOpen(NegativePin);
 }

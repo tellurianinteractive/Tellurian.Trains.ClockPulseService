@@ -22,9 +22,9 @@ public sealed class PulseGenerator : IAsyncDisposable
     private ClockStatus? Previous;
 
     public IEnumerable<string> InstalledSinksTypes => Sinks.Select(s => s.GetType().Name);
-    public PulseGenerator(IOptions<PulseGeneratorSettings> options, IEnumerable<IPulseSink> sinks, ILogger logger, bool resetOnStart = false)
+    public PulseGenerator(PulseGeneratorSettings settings, IEnumerable<IPulseSink> sinks, ILogger logger, bool resetOnStart = false)
     {
-        Settings = options.Value;
+        Settings = settings;
         Sinks = sinks;
         Logger = logger;
         CanWriteFiles = true;
