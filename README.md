@@ -83,11 +83,17 @@ To run the app locally, see [available deployments](https://onedrive.live.com/?i
 It will be downloaded as a ZIP-file. Unzip and transfer to the computer you will run it on.
 
 ### Some Experiences
-In [this discussion on GitHub](https://github.com/tellurianinteractive/Tellurian.Trains.ModuleMeetingApp/discussions/44), 
-there are many ideas of how to translate a stream of times to pulses for controlling an pulsedriven analogue clock.
-
-During March 2022, I started to make [Clock Pulse Service](https://github.com/fjallemark/ClockPulseService) for polling the [clock API](https://github.com/tellurianinteractive/Tellurian.Trains.ModuleMeetingApp/wiki/API-Guidelines) and generate data about pulses to send. 
-I also bought a [RPi Relay Board](https://www.waveshare.com/wiki/RPi_Relay_Board) and mounted it om my old Raspberry Pi 2. Then I wrote an implementation of [IPulseSink](https://github.com/fjallemark/ClockPulseService/blob/master/Service/RpiRelayBoardPulseSink.cs) for that relay board, and have now run it on the Raspberry Pi to test it out, and after some adjustments, it  seems to work as expected.
+During March 2022, I started to make [Clock Pulse Service](https://github.com/fjallemark/ClockPulseService) 
+for polling the [clock API](https://github.com/tellurianinteractive/Tellurian.Trains.ModuleMeetingApp/wiki/API-Guidelines) 
+and generate data about pulses to send. 
+I also bought a [RPi Relay Board](https://www.waveshare.com/wiki/RPi_Relay_Board) 
+and mounted it om my old Raspberry Pi 2. 
+Then I wrote an implementation of [IPulseSink](https://github.com/fjallemark/ClockPulseService/blob/master/Service/RpiRelayBoardPulseSink.cs) 
+for that relay board, and have now run it on the Raspberry Pi to test it out, and after some adjustments, it seems to work as expected.
 
 With the software, it is also possible to directly use the I/O-pins on the Raspberry Pi without the relay board. 
 This is fine if another device controlling the clock only needs low current I/O. 
+
+### Discussions
+In [this discussion on GitHub](https://github.com/tellurianinteractive/Tellurian.Trains.ModuleMeetingApp/discussions/44), 
+there are many ideas of how to translate a stream of times to pulses for controlling an pulsedriven analogue clock.
