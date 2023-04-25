@@ -9,34 +9,25 @@ namespace Tellurian.Trains.ClockPulseApp.Service;
 /// </summary>
 public sealed class SerialPortPulseSink : IPulseSink, IDisposable
 {
-    private readonly SerialPort? Port;
+    private SerialPort? Port;
     private readonly ILogger Logger;
     private readonly bool UseDtrOnly;
+    private readonly string PortName;
+
     public SerialPortPulseSink(string portName, ILogger logger, bool useDtrOnly = false)
     {
+        PortName = portName;
         Logger = logger;
         UseDtrOnly = useDtrOnly;
-        try
-        {
-            Port = new(portName)
-            {
-                RtsEnable = false,
-                DtrEnable = false
-            };
-        }
-        catch (IOException ex)
-        {
-            Logger.LogCritical(ex, "Serial port {portName} failed:", portName);
-        }
-    }
+     }
     public Task NegativeVoltageAsync()
     {
         try
         {
             if (Port is not null)
-                if (UseDtrOnly) 
+                if (UseDtrOnly)
                     Port.DtrEnable = true;
-                else 
+                else
                     Port.RtsEnable = true;
         }
         catch (IOException ex)
@@ -72,16 +63,37 @@ public sealed class SerialPortPulseSink : IPulseSink, IDisposable
         return Task.CompletedTask;
     }
 
-    public void Dispose() => Port?.Dispose();
     public Task InitializeAsync()
     {
-        Logger.LogInformation("Serial port pulse sink started.");
+        try
+        {
+            Port = new(PortName)
+            {
+                RtsEnable = false,
+                DtrEnable = false
+            };
+         Logger.LogInformation("Serial port pulse sink started.");
+       }
+        catch (IOException ex)
+        {
+            Logger.LogCritical(ex, "Serial port {portName} failed:", PortName);
+        }
         return Task.CompletedTask;
     }
 
     public Task CleanupAsync()
     {
+        Port?.Dispose();
+        Port = null;
         Logger.LogInformation("Serial port pulse sink stopped.");
         return Task.CompletedTask;
     }
+    public void Dispose() => Port?.Dispose();
 }
+
+public static class SerialPulseSinkExtensions
+{
+    public static bool IsValidSerialPortName(this string? name) =>
+        !string.IsNullOrWhiteSpace(name) && name.ToUpperInvariant().StartsWith("COM");
+}
+

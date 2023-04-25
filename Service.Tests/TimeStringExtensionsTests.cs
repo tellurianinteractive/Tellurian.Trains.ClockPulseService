@@ -9,44 +9,45 @@ public class TimeStringExtensionsTests
     public void NullThrows()
     {
         Assert.ThrowsException<ArgumentNullException>(() =>
-            TimeStringExtensions.AsTimespan(null));
+            TimeStringExtensions.AsTimeOnly(null));
     }
 
     [TestMethod]
     public void NonTimeThrows()
     {
         Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
-            "ABC-".AsTimespan());       
+            "ABC-".AsTimeOnly());
     }
 
     [TestMethod]
     public void ParsesTime()
     {
-       var actual=  "12:15".AsTimespan();
-        Assert.AreEqual(TimeSpan.FromHours(12.25), actual);
+        var actual = "12:15".AsTimeOnly();
+        Assert.AreEqual(new TimeOnly(12,15,0), actual);
     }
 
     [TestMethod]
     public void DigitsOnlyThrows()
     {
         Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
-            "12345".AsTimespan());
-        
+            "12345".AsTimeOnly());
+
     }
 
     [TestMethod]
     public void AddOneMonuteAt1259()
     {
-        var time = new TimeSpan(12, 59, 0);
+        var time = new TimeOnly(12, 59, 0);
         var actual = time.AddOneMinute(true);
-        Assert.AreEqual(1.0, actual.TotalHours);
+        Assert.AreEqual(1, actual.Hour);
     }
 
     [TestMethod]
     public void AddOneMonuteAt2359()
     {
-        var time = new TimeSpan(23, 59, 0);
+        var time = new TimeOnly(23, 59, 0);
         var actual = time.AddOneMinute();
-        Assert.AreEqual(TimeSpan.Zero, actual);
+        Assert.AreEqual(0, actual.Hour);
+        Assert.AreEqual(0, actual.Minute);
     }
 }

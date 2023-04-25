@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Options;
-using Tellurian.Trains.MeetingApp.Contracts;
+﻿using Tellurian.Trains.MeetingApp.Contracts;
 
 namespace Tellurian.Trains.ClockPulseApp.Service;
 
@@ -9,11 +8,12 @@ public sealed class PulseGenerator : IAsyncDisposable
     private readonly PulseGeneratorSettings Settings;
     private readonly IEnumerable<IPulseSink> Sinks;
     private readonly bool ResetOnStart;
+    private readonly TimeOnly RestartTime;
     private bool IsInitialized;
     private bool CanWriteFiles;
 
-    public TimeSpan CurrentTime { get; private set; }
-    public TimeSpan AnalogueClockTime { get; private set; }
+    public TimeOnly CurrentTime { get; private set; }
+    public TimeOnly AnalogueClockTime { get; private set; }
     public string RemoteClockTimeHref => Settings.RemoteClockTimeHref;
     public int PollIntervalSeconds => Settings.PollIntervalSeconds;
     public int ErrorWaitRetryMilliseconds => Settings.ErrorWaitRetrySeconds * 60;
@@ -22,19 +22,20 @@ public sealed class PulseGenerator : IAsyncDisposable
     private ClockStatus? Previous;
 
     public IEnumerable<string> InstalledSinksTypes => Sinks.Select(s => s.GetType().Name);
-    public PulseGenerator(PulseGeneratorSettings settings, IEnumerable<IPulseSink> sinks, ILogger logger, bool resetOnStart = false)
+    public PulseGenerator(PulseGeneratorSettings settings, IEnumerable<IPulseSink> sinks, ILogger logger, bool resetOnStart, TimeOnly restartTime)
     {
         Settings = settings;
         Sinks = sinks;
         Logger = logger;
         CanWriteFiles = true;
         ResetOnStart = resetOnStart;
+        RestartTime = restartTime;
     }
 
     private async Task InitializeAsync()
     {
         TryResetAnalogueTime();
-        foreach (var sink in Sinks) await sink.InitializeAsync();
+        foreach (var sink in Sinks.OfType<IControlSink>()) await sink.InitializeAsync();
         AnalogueClockTime = await InitializeAnalogueTime();
         Logger.LogInformation("Analogue time starting at {time}", AnalogueClockTime.AsTime());
         IsInitialized = true;
@@ -47,7 +48,7 @@ public sealed class PulseGenerator : IAsyncDisposable
             try
             {
                 File.Delete(LastAnalogueTimeFileName);
-                Logger.LogInformation("Analogue time reset to {time)", Settings.AnalogueClockStartTime);
+                Logger.LogInformation("Analogue time reset to {time)", RestartTime);
 
             }
             catch (IOException ex)
@@ -57,16 +58,16 @@ public sealed class PulseGenerator : IAsyncDisposable
         }
     }
 
-    private async Task<TimeSpan> InitializeAnalogueTime()
+    private async Task<TimeOnly> InitializeAnalogueTime()
     {
-        var initialTime = Settings.AnalogueClockStartTime;
+        var initialTime = RestartTime;
         if (File.Exists(LastAnalogueTimeFileName))
         {
             var fileTime = await File.ReadAllTextAsync(LastAnalogueTimeFileName);
-            if (fileTime is not null && fileTime.Length >= 5) initialTime = fileTime[..5];
+            if (fileTime is not null && fileTime.Length >= 5) initialTime = fileTime[..5].AsTimeOnly(Settings.Use12HourClock);
             else Logger.LogWarning("Cannot interpret time in file {file}", LastAnalogueTimeFileName);
         }
-        return initialTime.AsTimespan(Settings.Use12HourClock);
+        return initialTime;
     }
 
 
@@ -102,7 +103,7 @@ public sealed class PulseGenerator : IAsyncDisposable
                     Logger.LogError(ex, "Sink {sink} faulted when starting.", sink.GetType().Name);
                 }
         }
-        CurrentTime = status.Time.AsTimespan(Settings.Use12HourClock);
+        CurrentTime = status.Time.AsTimeOnly(Settings.Use12HourClock);
         if (CurrentTime == AnalogueClockTime) return;
         if (AnalogueClockTime.IsOneMinuteAfter(CurrentTime, Settings.Use12HourClock))
         {
@@ -138,7 +139,7 @@ public sealed class PulseGenerator : IAsyncDisposable
 
     private async Task MoveOneMinute()
     {
-        if (AnalogueClockTime.Minutes % 2 == 0)
+        if (AnalogueClockTime.Minute % 2 == 0)
             if (Settings.FlipPolarity) await SetPositive(); else await SetNegative();
         else
             if (Settings.FlipPolarity) await SetNegative(); else await SetPositive();
@@ -211,7 +212,7 @@ public sealed class PulseGenerator : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         Logger.LogInformation("Disposing {component}...", nameof(PulseGenerator));
-        foreach (var sink in Sinks) await sink.CleanupAsync();
+        foreach (var sink in Sinks.OfType<IControlSink>()) await sink.CleanupAsync();
         foreach (var sink in Sinks.OfType<IDisposable>()) sink.Dispose();
         foreach (var sink in Sinks.OfType<IAsyncDisposable>()) await sink.DisposeAsync();
         Logger.LogInformation("Disposed {component}", nameof(PulseGenerator));

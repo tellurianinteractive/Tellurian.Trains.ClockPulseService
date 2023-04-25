@@ -7,10 +7,18 @@ and creates logical pulses to drive analogue clocks.**
 The alternative is to call the clock API and getting the time. 
 
 ## Release Notes
-Release 1.5.1 at 2023-04-24:
+Release 1.5.2 at 2023-04-25:
 - **RPI Relay Board** sink implementation changed to eliminate need of extra relays.
   - Relay 1 is now *voltage on* and is acitvated for each pulse.
   - Relay 2 and 3 controls *polarity* and feeds the RUT clocks.
+  Relay 2 & 3 is activated 250 ms before relay 1 to ensure that polarity is set
+  before voltage is turned on.
+- Interface **IControlSink** is not any longer inherited in *IPulseSink*, 
+  because initialization and clean-up is not needed for all type of implementations.
+  Implementation of *IControlSink* is optional.
+- Option to set current displayed time on analogue clocks when starting the app.
+  Example: 
+    ```./Tellurian.Trains.ClockPulseApp.Service -r -t 10:35```
 
 Release 1.4.0 at 2022-07-22 adds the following:
 - **Improved analouge clock synchronisation** with the option to flip polarity in *appsettings.json*.
@@ -18,7 +26,8 @@ Release 1.4.0 at 2022-07-22 adds the following:
 
 Release 1.3.0 at 2022-03-31 adds the following:
 - **Monitoring of clock running or not** through the new sink type *IStatusSink*. 
-If this interface is implemented in a sink, you can control indicators whether the clock is running or not.
+If this interface is optional to implement in a sink. 
+You can control indicators whether the clock is running or not.
 - **Analogue time initialisation** is now in a separate file *AnalogueTime.txt*. While this file can be manual edited, it will be overwritten
 with the current analouge time. This makes restart of the service better, because it *remebers* the last analogue time.
 If the file does not exist or for some reason cannon be written, the *AnalogueClockStartTime* in *appsettings.json* will be used.

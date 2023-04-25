@@ -4,7 +4,8 @@ IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
         var configuration = context.Configuration;
-        var loggerFactory = LoggerFactory.Create(configure => {
+        var loggerFactory = LoggerFactory.Create(configure =>
+        {
             configure.ClearProviders();
             configure.AddConsole();
         });
@@ -12,7 +13,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.Configure<PulseGeneratorSettings>(
             configuration.GetSection(nameof(PulseGeneratorSettings)));
 
-    })            
+    })
     .Build();
 
 await host.RunAsync();

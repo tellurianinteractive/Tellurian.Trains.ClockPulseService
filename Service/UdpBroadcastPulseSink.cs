@@ -9,9 +9,9 @@ public sealed class UdpBroadcastPulseSink : IPulseSink, IDisposable
     private readonly IPEndPoint BroadcastEndpoint;
     private readonly UdpClient Broadcaster;
 
-    private static readonly byte[] Positive = new[] { (byte)0x2B }; 
-    private static readonly byte[] Negative = new[] { (byte)0x2D }; 
-    private static readonly byte[] Zero = new[] { (byte)0x5F }; 
+    private static readonly byte[] Positive = "+"u8.ToArray();
+    private static readonly byte[] Negative = "-"u8.ToArray();
+    private static readonly byte[] Zero = "_"u8.ToArray();
 
     public UdpBroadcastPulseSink(IPEndPoint broadcastEndpoint, ILogger logger)
     {

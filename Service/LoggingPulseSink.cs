@@ -1,6 +1,6 @@
 ﻿namespace Tellurian.Trains.ClockPulseApp.Service;
 
-public sealed class LoggingPulseSink : IPulseSink, IStatusSink
+public sealed class LoggingPulseSink : IPulseSink, IStatusSink, IControlSink
 {
     public LoggingPulseSink(ILogger logger) => Logger = logger ?? throw new ArgumentNullException(nameof(logger));
 

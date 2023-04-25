@@ -12,17 +12,23 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> Logger;
     private readonly PeriodicTimer Timer;
     private readonly PulseGenerator PulseGenerator;
+
     private readonly bool ResetOnStart;
+    private readonly TimeOnly AnalogueClockStartTime;
 
     public Worker(string[] args, IConfiguration configuration, IHostEnvironment environment, ILogger<Worker> logger)
     {
-        ResetOnStart = args.Contains("-r", StringComparer.OrdinalIgnoreCase);
         Logger = logger;
         var settings = GetSettings(configuration);
         ArgumentNullException.ThrowIfNull(settings);
+        var commands = CommandLineArgs(args, settings.AnalogueClockStartTime.AsTimeOnly());
+
+        ResetOnStart = commands.ResetOnStart;
+        AnalogueClockStartTime = commands.RestartTime;
+
         var sinks = new List<IPulseSink>()
         {
-            new LoggingPulseSink(Logger) 
+            new LoggingPulseSink(Logger)
         };
         if (!settings.SerialPulseSink.Disabled && SerialPort.GetPortNames().Contains(settings.SerialPulseSink.PortName))
         {
@@ -38,10 +44,19 @@ public class Worker : BackgroundService
         }
         if (environment.IsDevelopment())
         {
-            sinks.Add(new AnalogueClockSimulationPulseSink(settings.AnalogueClockStartTime.AsTimespan(), logger));
+            sinks.Add(new AnalogueClockSimulationPulseSink(AnalogueClockStartTime, logger));
         }
-        PulseGenerator = new PulseGenerator(settings, sinks, Logger, ResetOnStart);
+        PulseGenerator = new PulseGenerator(settings, sinks, Logger, ResetOnStart, AnalogueClockStartTime);
         Timer = new PeriodicTimer(TimeSpan.FromSeconds(PulseGenerator.PollIntervalSeconds));
+    }
+
+    private static (bool ResetOnStart, TimeOnly RestartTime) CommandLineArgs(string[] args, TimeOnly defaultStartTime)
+    {
+        var reset = args.Contains("-r", StringComparer.OrdinalIgnoreCase);
+        var index = Array.IndexOf(args, "-t");
+        TimeOnly? startTime = null;
+        if (index > -1) { startTime = args[index + 1].AsTimeOnly(); }
+        return (reset, startTime ?? defaultStartTime);
     }
 
     private PulseGeneratorSettings? GetSettings(IConfiguration configuration) =>
