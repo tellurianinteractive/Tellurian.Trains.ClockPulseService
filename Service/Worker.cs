@@ -73,7 +73,7 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        Logger.LogInformation("App version {version} started at {time}", Assembly.GetExecutingAssembly().GetName().Version, DateTimeOffset.Now);
+        Logger.LogInformation("App version {version} started.", Assembly.GetExecutingAssembly().GetName().Version);
         Logger.LogInformation("Settings: {settings}", PulseGenerator);
         Logger.LogInformation("Installed sinks: {sinks}", string.Join(", ", PulseGenerator.InstalledSinksTypes));
 
@@ -101,19 +101,19 @@ public class Worker : BackgroundService
                     HasError = false;
                     var json = await response.Content.ReadAsStringAsync(stoppingToken);
                     var status = JsonSerializer.Deserialize<ClockStatus>(json, jsonOptions);
-                    Logger.LogInformation("Time requested at {time}: server time is {clock}", DateTimeOffset.Now.ToString("HH:mm:ss"), status?.Time);
+                    Logger.LogInformation("Time requested: server time is {clock}",  status?.Time);
                     if (status is not null) await PulseGenerator.Update(status);
                 }
                 else
                 {
                     HasError = true;
-                    Logger.LogError("Error at: {time}. Responded with code {code}", DateTimeOffset.Now, response.StatusCode.ToString());
+                    Logger.LogError("Responded with code {code}", response.StatusCode.ToString());
                 }
             }
             catch (Exception ex)
             {
                 HasError = true;
-                Logger.LogError("Error at: {time}. Reason: {message}", DateTimeOffset.Now, ex.Message);
+                Logger.LogError("Reason: {message}", ex.Message);
             }
         }
     }

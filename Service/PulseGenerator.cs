@@ -84,7 +84,6 @@ public sealed class PulseGenerator : IAsyncDisposable
         return initialTime;
     }
 
-
     public async Task Update(ClockStatus status)
     {
         if (!IsInitialized) await InitializeAsync();
@@ -197,7 +196,7 @@ public sealed class PulseGenerator : IAsyncDisposable
             Logger.LogError(ex, "Cannot write analogue time to {file}", LastAnalogueTimeFileName);
         }
     }
-
+ 
     private async Task SetPositive()
     {
         await Notify<IPulseSink>(SetPositive);
@@ -213,6 +212,7 @@ public sealed class PulseGenerator : IAsyncDisposable
             }
         }
     }
+
     private async Task SetNegative()
     {
         await Notify<IPulseSink>(SetNegative);
@@ -228,6 +228,7 @@ public sealed class PulseGenerator : IAsyncDisposable
             }
         }
     }
+
     private async Task SetZero()
     {
         await Notify<IPulseSink>(SetZero);
@@ -243,7 +244,6 @@ public sealed class PulseGenerator : IAsyncDisposable
             }
         }
     }
-
 
     private async ValueTask Notify<T>(Func<T, Task> action) where T : class
     {
