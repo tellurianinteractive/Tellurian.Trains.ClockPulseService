@@ -1,9 +1,9 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 
-namespace Tellurian.Trains.ClockPulseApp.Service;
+namespace Tellurian.Trains.ClockPulseApp.Service.Sinks;
 
-public sealed class UdpBroadcastPulseSink : IPulseSink, IDisposable
+public sealed class UdpBroadcastSink : IPulseSink, IDisposable
 {
     private readonly ILogger Logger;
     private readonly IPEndPoint BroadcastEndpoint;
@@ -13,7 +13,7 @@ public sealed class UdpBroadcastPulseSink : IPulseSink, IDisposable
     private static readonly byte[] Negative = "-"u8.ToArray();
     private static readonly byte[] Zero = "_"u8.ToArray();
 
-    public UdpBroadcastPulseSink(IPEndPoint broadcastEndpoint, ILogger logger)
+    public UdpBroadcastSink(IPEndPoint broadcastEndpoint, ILogger logger)
     {
         Logger = logger;
         BroadcastEndpoint = broadcastEndpoint;

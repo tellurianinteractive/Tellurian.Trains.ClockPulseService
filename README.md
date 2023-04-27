@@ -7,7 +7,9 @@ and creates logical pulses to drive analogue clocks.**
 The alternative is to call the clock API and getting the time. 
 
 ## Release Notes
-Release 1.5.2 at 2023-04-25:
+Release 1.5.5 at 2023-04-27:
+- **Parallelized notifications** to sinks and documented sink method time restrictions.
+- **Analogue time** now is presented in better sync with how pulses influence an analogue clock.
 - **RPI Relay Board** sink implementation changed to eliminate need of extra relays.
   - Relay 1 is now *voltage on* and is acitvated for each pulse.
   - Relay 2 and 3 controls *polarity* and feeds the RUT clocks.
@@ -16,9 +18,10 @@ Release 1.5.2 at 2023-04-25:
 - Interface **IControlSink** is not any longer inherited in *IPulseSink*, 
   because initialization and clean-up is not needed for all type of implementations.
   Implementation of *IControlSink* is optional.
-- Option to set current displayed time on analogue clocks when starting the app.
+- **Actual analouge time** as displayed on clocks can now be given when starting the app.
+  The time must be in format *hh:mm*.
   Example: 
-    ```./Tellurian.Trains.ClockPulseApp.Service -r -t 10:35```
+    ```./Tellurian.Trains.ClockPulseApp.Service -t 10:35```
 
 Release 1.4.0 at 2022-07-22 adds the following:
 - **Improved analouge clock synchronisation** with the option to flip polarity in *appsettings.json*.
@@ -83,7 +86,7 @@ There are some ready-made *sinks*:
 However, it can be configured to use DTR only for both positive and negative voltage.
 - **RpiRelayBoardPulseSink** using three relays to control pulses and polarities.
 The [Rpi Relay Board](https://www.waveshare.com/wiki/RPi_Relay_Board) is a relay hat for *Raspberry Pi*
-ans works with this software when running on Linux.
+that works with this software when running on Linux.
 
 There is also a **LoggingPulseSink** logs to the console.
 

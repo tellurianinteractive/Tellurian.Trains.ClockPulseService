@@ -1,12 +1,14 @@
-﻿namespace Tellurian.Trains.ClockPulseApp.Service;
-internal class AnalogueClockSimulationPulseSink : IPulseSink
+﻿using Tellurian.Trains.ClockPulseApp.Service.Extensions;
+
+namespace Tellurian.Trains.ClockPulseApp.Service.Sinks;
+internal class AnalogueClockSimulationSink : IPulseSink
 {
     private TimeOnly Time;
     private const bool Is12Hour = true;
 
     public ILogger Logger { get; }
 
-    public AnalogueClockSimulationPulseSink(TimeOnly initialTime, ILogger logger)
+    public AnalogueClockSimulationSink(TimeOnly initialTime, ILogger logger)
     {
         Time = initialTime;
         Logger = logger;
@@ -31,5 +33,5 @@ internal class AnalogueClockSimulationPulseSink : IPulseSink
         return Task.CompletedTask;
     }
 
-    override public string ToString() => Time.AsTime(Is12Hour);
+    override public string ToString() => Time.AsString(Is12Hour);
 }

@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Tellurian.Trains.ClockPulseApp.Service.Sinks;
 
 namespace Tellurian.Trains.ClockPulseApp.Service;
 

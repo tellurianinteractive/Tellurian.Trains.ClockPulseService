@@ -3,6 +3,9 @@
 /// <summary>
 /// Interface to implement for any type of hardware control
 /// </summary>
+/// <remarks>
+/// Each method must complete within approx 10 milliseconds.
+/// </remarks>
 public interface IPulseSink
 { 
     /// <summary>

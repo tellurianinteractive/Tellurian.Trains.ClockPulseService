@@ -1,25 +1,25 @@
 ﻿using System.IO.Ports;
 
-namespace Tellurian.Trains.ClockPulseApp.Service;
+namespace Tellurian.Trains.ClockPulseApp.Service.Sinks;
 
 /// <summary>
 /// Signals pulses by the handshaking wires DTR and RTS.
 /// While RTS remains high a positive clock voltage should be on.
 /// While DTR remains high a negative clock voltage should be on.
 /// </summary>
-public sealed class SerialPortPulseSink : IPulseSink, IDisposable
+public sealed class SerialPortSink : IPulseSink, IDisposable
 {
     private SerialPort? Port;
     private readonly ILogger Logger;
     private readonly bool UseDtrOnly;
     private readonly string PortName;
 
-    public SerialPortPulseSink(string portName, ILogger logger, bool useDtrOnly = false)
+    public SerialPortSink(string portName, ILogger logger, bool useDtrOnly = false)
     {
         PortName = portName;
         Logger = logger;
         UseDtrOnly = useDtrOnly;
-     }
+    }
     public Task NegativeVoltageAsync()
     {
         try
@@ -72,8 +72,8 @@ public sealed class SerialPortPulseSink : IPulseSink, IDisposable
                 RtsEnable = false,
                 DtrEnable = false
             };
-         Logger.LogInformation("Serial port pulse sink started.");
-       }
+            Logger.LogInformation("Serial port pulse sink started.");
+        }
         catch (IOException ex)
         {
             Logger.LogCritical(ex, "Serial port {portName} failed:", PortName);

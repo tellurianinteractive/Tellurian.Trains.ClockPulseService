@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Tellurian.Trains.ClockPulseApp.Service.Extensions;
 
 namespace Tellurian.Trains.ClockPulseApp.Service.Tests;
 
@@ -49,5 +50,22 @@ public class TimeStringExtensionsTests
         var actual = time.AddOneMinute();
         Assert.AreEqual(0, actual.Hour);
         Assert.AreEqual(0, actual.Minute);
+    }
+
+    [TestMethod]
+    public void IsOneMinuteAfter()
+    {
+        var time = "07:39".AsTimeOnly();
+        var other = "07:40".AsTimeOnly();
+        Assert.IsTrue(time.IsOneMinuteAfter(other));
+
+    }
+
+    [TestMethod]
+    public void AreEqual()
+    {
+        var time = "07:40".AsTimeOnly();
+        var other = "07:40".AsTimeOnly();
+        Assert.IsTrue(time.IsEqualTo(other));
     }
 }
