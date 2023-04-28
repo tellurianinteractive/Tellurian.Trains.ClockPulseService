@@ -8,8 +8,9 @@ The alternative is to call the clock API and getting the time.
 
 ## Release Notes
 Release 1.5.5 at 2023-04-27:
-- **Parallelized notifications** to sinks and documented sink method time restrictions.
-- **Analogue time** now is presented in better sync with how pulses influence an analogue clock.
+- **Parallelized notifications** to sinks.
+- **Time restrictions** for sink methods documented for those who implement a sink.
+- **Analogue time** logging is now presented in better sync with how pulses influence an analogue clock.
 - **RPI Relay Board** sink implementation changed to eliminate need of extra relays.
   - Relay 1 is now *voltage on* and is acitvated for each pulse.
   - Relay 2 and 3 controls *polarity* and feeds the RUT clocks.
