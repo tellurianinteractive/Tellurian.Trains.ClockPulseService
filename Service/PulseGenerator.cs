@@ -15,8 +15,8 @@ public sealed class PulseGenerator : IAsyncDisposable
     private bool IsInitialized;
     private bool CanWriteFiles;
 
-    public TimeOnly CurrentTime { get; private set; }
-    public TimeOnly AnalogueClockTime { get; private set; }
+    public TimeOnly ServerTime { get; private set; }
+    public TimeOnly AnalogueTime { get; private set; }
     public string RemoteClockTimeHref => Settings.RemoteClockTimeHref;
     public int PollIntervalSeconds => Settings.PollIntervalSeconds;
     public int ErrorWaitRetryMilliseconds => Settings.ErrorWaitRetrySeconds * 60;
@@ -43,60 +43,19 @@ public sealed class PulseGenerator : IAsyncDisposable
         RestartTime = restartTime;
     }
 
-    private async Task InitializeAsync()
-    {
-        await TryResetAnalogueTime();
-        AnalogueClockTime = await InitializeAnalogueTime();
-        await Notify<IControlSink>(InitializeAsync);
-        Logger.LogInformation("Analogue time starting at {time}", AnalogueClockTime.AsString());
-        IsInitialized = true;
-
-        async Task InitializeAsync(IControlSink sink)
-        {
-            try
-            {
-                await sink.InitializeAsync(AnalogueClockTime);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Sink {sink} failed initialization.", sink.GetType().Name);
-            }
-        }
-    }
-
-    private async Task TryResetAnalogueTime()
-    {
-        if (ResetOnStart)
-        {
-            await SaveAnalogueClockTime(RestartTime);
-        }
-    }
-
-    private async Task<TimeOnly> InitializeAnalogueTime()
-    {
-        var initialTime = RestartTime;
-        if (File.Exists(LastAnalogueTimeFileName))
-        {
-            var fileTime = await File.ReadAllTextAsync(LastAnalogueTimeFileName);
-            if (fileTime?.Length >= 5) initialTime = fileTime[..5].AsTimeOnly(Settings.Use12HourClock);
-            else Logger.LogWarning("Cannot interpret time in file {file}", LastAnalogueTimeFileName);
-        }
-        return initialTime;
-    }
-
     public async Task Update(ClockStatus status)
     {
         if (!IsInitialized) await InitializeAsync();
         await HandleClockStartAndStop(status);
         if (ShouldIgnoreStatus(status)) return;
-        CurrentTime = status.Time.AsTimeOnly(Settings.Use12HourClock);
-        if (AnalogueClockTime.IsEqualTo(CurrentTime, Settings.Use12HourClock))
+        ServerTime = status.Time.AsTimeOnly(Settings.Use12HourClock);
+        if (AnalogueTime.IsEqualTo(ServerTime, Settings.Use12HourClock))
         {
         }
-        else if (AnalogueClockTime.IsOneMinuteAfter(CurrentTime, Settings.Use12HourClock))
+        else if (AnalogueTime.IsOneMinuteAfter(ServerTime, Settings.Use12HourClock))
         {
-            Logger.LogInformation("\x1B[1m\x1B[33mServer time: {time}\x1B[39m\x1B[22m", CurrentTime.AsString(Settings.Use12HourClock));
-            AnalogueClockTime = await PulseOneMinute(AnalogueClockTime);
+            Logger.LogInformation("\x1B[1m\x1B[33mServer time: {time}\x1B[39m\x1B[22m", ServerTime.AsString(Settings.Use12HourClock));
+            AnalogueTime = await PulseOneMinute(AnalogueTime);
         }
         else
         {
@@ -107,10 +66,29 @@ public sealed class PulseGenerator : IAsyncDisposable
            status.IsUnavailable || status.IsRealtime || status.IsPaused;
     }
 
+    private async Task InitializeAsync()
+    {
+        await TryResetAnalogueTime();
+        AnalogueTime = await InitializeAnalogueTime();
+        await Notify<IControlSink>(InitializeAsync);
+        Logger.LogInformation("Analogue time starting at {time}", AnalogueTime.AsString());
+        IsInitialized = true;
+
+        async Task InitializeAsync(IControlSink sink)
+        {
+            try
+            {
+                await sink.InitializeAsync(AnalogueTime);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Sink {sink} failed initialization.", sink.GetType().Name);
+            }
+        }
+    }
+
     private async Task HandleClockStartAndStop(ClockStatus status)
     {
-        var wasStopped = status.WasStopped(Previous);
-        var wasStarted = status.WasStarted(Previous);
         if (status.WasStopped(Previous))
         {
             await Notify<IStatusSink>(NotifyStopped);
@@ -145,15 +123,35 @@ public sealed class PulseGenerator : IAsyncDisposable
         }
     }
 
+    private async Task TryResetAnalogueTime()
+    {
+        if (ResetOnStart)
+        {
+            await SaveAnalogueClockTime(RestartTime);
+        }
+    }
+
+    private async Task<TimeOnly> InitializeAnalogueTime()
+    {
+        var initialTime = RestartTime;
+        if (File.Exists(LastAnalogueTimeFileName))
+        {
+            var fileTime = await File.ReadAllTextAsync(LastAnalogueTimeFileName);
+            if (fileTime?.Length >= 5) initialTime = fileTime[..5].AsTimeOnly(Settings.Use12HourClock);
+            else Logger.LogWarning("Cannot interpret time in file {file}", LastAnalogueTimeFileName);
+        }
+        return initialTime;
+    }
+
     private async Task FastForward()
     {
         using PeriodicTimer fastTimer = new(TimeSpan.FromMilliseconds(Settings.FastForwardIntervalMilliseconds));
-        Logger.LogInformation("\x1B[1m\x1B[33mStart fast forwarding to time: {time}\x1B[39m\x1B[22m", CurrentTime.AsString(Settings.Use12HourClock));
+        Logger.LogInformation("\x1B[1m\x1B[33mStart fast forwarding to time: {time}\x1B[39m\x1B[22m", ServerTime.AsString(Settings.Use12HourClock));
         foreach (var sink in Sinks.OfType<IAnalogueClockStatus>()) await sink.AnalogueClocksAreFastForwardingAsync();
-        while (!AnalogueClockTime.IsEqualTo(CurrentTime, Settings.Use12HourClock))
+        while (!AnalogueTime.IsEqualTo(ServerTime, Settings.Use12HourClock))
         {
             await fastTimer.WaitForNextTickAsync();
-            AnalogueClockTime = await PulseOneMinute(AnalogueClockTime);
+            AnalogueTime = await PulseOneMinute(AnalogueTime);
         }
         foreach (var sink in Sinks.OfType<IAnalogueClockStatus>()) await sink.AnalogueClocksStoppedFastForwardingAsync();
     }
@@ -196,7 +194,7 @@ public sealed class PulseGenerator : IAsyncDisposable
             Logger.LogError(ex, "Cannot write analogue time to {file}", LastAnalogueTimeFileName);
         }
     }
- 
+
     private async Task SetPositive()
     {
         await Notify<IPulseSink>(SetPositive);
@@ -245,9 +243,9 @@ public sealed class PulseGenerator : IAsyncDisposable
         }
     }
 
-    private async ValueTask Notify<T>(Func<T, Task> action) where T : class
+    private async ValueTask Notify<TSink>(Func<TSink, Task> action) where TSink : class
     {
-        var tasks = Sinks.OfType<T>().Select(sink => action(sink)).AsEnumerable();
+        var tasks = Sinks.OfType<TSink>().Select(sink => action(sink)).ToArray();
         await Task.WhenAll(tasks);
     }
 

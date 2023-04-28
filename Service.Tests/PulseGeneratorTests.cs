@@ -44,8 +44,8 @@ public partial class PulseGeneratorTests
         CollectionAssert.AreEquivalent(
             sink.VoltageChanges.Select(vc => vc.Voltage).ToArray(),
             new[] { 12, 0, -12, 0, 12, 0, -12, 0, 12, 0, -12, 0 });
-        Assert.AreEqual("06:06", target.AnalogueClockTime.AsString());
-        Assert.AreEqual("06:06", target.CurrentTime.AsString());
+        Assert.AreEqual("06:06", target.AnalogueTime.AsString());
+        Assert.AreEqual("06:06", target.ServerTime.AsString());
     }
 
     [TestMethod]
@@ -55,8 +55,8 @@ public partial class PulseGeneratorTests
         var target = CreateTargetWithSink(sink);
         var newTime = "06:10".AsTimeOnly();
         await target.Update(new() { IsRunning = true, Time = newTime.AsString() });
-        Assert.AreEqual("06:10", target.AnalogueClockTime.AsString());
-        Assert.AreEqual("06:10", target.CurrentTime.AsString());
+        Assert.AreEqual("06:10", target.AnalogueTime.AsString());
+        Assert.AreEqual("06:10", target.ServerTime.AsString());
         Assert.AreEqual(20, sink.VoltageChanges.Count());
     }
 
