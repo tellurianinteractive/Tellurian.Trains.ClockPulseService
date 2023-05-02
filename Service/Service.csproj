@@ -28,4 +28,14 @@
 		<PackageReference Include="System.IO.Ports" Version="7.0.0" />
 		<PackageReference Include="Tellurian.Trains.MeetingApp.Contracts" Version="3.2.21" />
 	</ItemGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<DebugSymbols>False</DebugSymbols>
+		<DebugType>None</DebugType>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(Configuration)' == 'Release'">
+		<Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
+	</ItemGroup>
+
 </Project>

@@ -16,6 +16,14 @@ public sealed class RpiRelayBoardSink : IPulseSink, IStatusSink, IControlSink, I
     private const int PositivePin = 20;
     private const int NegativePin = 21;
 
+    enum Polarity
+    {
+        Negative = -1,
+        Zero = 0,
+        Positive = 1,
+    }
+    private Polarity LastKnownPolarity;
+
     public async Task NegativeVoltageAsync()
     {
         if (ArePinsOpen)
@@ -24,10 +32,10 @@ public sealed class RpiRelayBoardSink : IPulseSink, IStatusSink, IControlSink, I
             Controller.Write(NegativePin, PinValue.Low);
             await Task.Delay(VoltagePinDelay);
             Controller.Write(VoltageOnPin, PinValue.Low);
+            LastKnownPolarity = Polarity.Negative;
         }
         else if (PinsAreNotOpenShouldBeLogged)
             LoggingOncePinsNotOpened();
-
     }
 
     public async Task PositiveVoltageAsync()
@@ -38,6 +46,7 @@ public sealed class RpiRelayBoardSink : IPulseSink, IStatusSink, IControlSink, I
             Controller.Write(NegativePin, PinValue.High);
             await Task.Delay(VoltagePinDelay);
             Controller.Write(VoltageOnPin, PinValue.Low);
+            LastKnownPolarity = Polarity.Positive;
         }
         else if (PinsAreNotOpenShouldBeLogged)
             LoggingOncePinsNotOpened();
@@ -47,11 +56,19 @@ public sealed class RpiRelayBoardSink : IPulseSink, IStatusSink, IControlSink, I
     {
         if (ArePinsOpen)
         {
+            ShortcutClock();
             Controller.Write(VoltageOnPin, PinValue.High);
         }
         else if (PinsAreNotOpenShouldBeLogged)
             LoggingOncePinsNotOpened();
+        LastKnownPolarity = Polarity.Zero;
         return Task.CompletedTask;
+    }
+
+    private void ShortcutClock()
+    {
+            if (LastKnownPolarity == Polarity.Negative) Controller.Write(PositivePin, PinValue.High);
+            else if (LastKnownPolarity == Polarity.Positive) Controller.Write(PositivePin, PinValue.Low);
     }
 
     public async Task InitializeAsync(TimeOnly analogueTime)

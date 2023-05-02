@@ -7,6 +7,10 @@ and creates logical pulses to drive analogue clocks.**
 The alternative is to call the clock API and getting the time. 
 
 ## Release Notes
+Release 1.6.0 at 2023-05-02:
+- **Clock cables** are now shortcutted when voltage becomes zero.
+  This is to effectively remove any inductive spikes in the clock circuit.
+
 Release 1.5.5 at 2023-04-27:
 - **Parallelized notifications** to sinks.
 - **Time restrictions** for sink methods documented for those who implement a sink.
