@@ -1,3 +1,4 @@
+using System.Device.Gpio;
 using System.IO.Ports;
 using System.Net;
 using System.Reflection;
@@ -39,7 +40,7 @@ public class Worker : BackgroundService
         };
         if (!settings.SerialPulseSink.Disabled && SerialPort.GetPortNames().Contains(settings.SerialPulseSink.PortName))
         {
-            sinks.Add(new SerialPortSink(settings.SerialPulseSink.PortName, Logger, settings.SerialPulseSink.DtrOnly));
+            sinks.Add(new SerialPortSink(settings.SerialPulseSink.PortName, Logger));
         }
         if (!settings.UdpBroadcast.Disabled && IPAddress.TryParse(settings.UdpBroadcast.IPAddress, out var iPAddress))
         {
@@ -47,7 +48,7 @@ public class Worker : BackgroundService
         }
         if (!settings.RpiRelayBoardPulseSink.Disabled && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            sinks.Add(new RpiRelayBoardSink(logger));
+            sinks.Add(new RpiRelayBoardSink(new GpioController(), logger));
         }
         if (environment.IsDevelopment())
         {

@@ -7,9 +7,20 @@ and creates logical pulses to drive analogue clocks.**
 The alternative is to call the clock API and getting the time. 
 
 ## Release Notes
+Release 1.7.0 at 2023-06-18:
+- **Rpi Relay Board** sink now uses relay 1 to signal when the clock is stopped
+  and relay 2 & 3 to control pulses to clocks.
+  During the pause between pulses, the clock wires are shortcut.
+  > NOTE: Wiring has changed. Zero voltage is now when both relays are in the **same** position. 
+  > This is to prevent current from flowing when both relays are off. 
+- **Session completed** can now be detected by sinks. The event is sent some seconds
+  after the clock stopped, so that a *stopped indicator* can be active during this time.
+  The duration of the session ended signal can be set in *appsettings.json*.
+
 Release 1.6.0 at 2023-05-02:
-- **Clock cables** are now shortcutted when voltage becomes zero.
-  This is to effectively remove any inductive spikes in the clock circuit.
+- **Rpi Relay Board Sink** now shortcuts the clock wires when voltage becomes zero
+  to reduce inductive spikes in the clock circuit.
+  Thanks to Claudia Mühl for the information.
 
 Release 1.5.5 at 2023-04-27:
 - **Parallelized notifications** to sinks.

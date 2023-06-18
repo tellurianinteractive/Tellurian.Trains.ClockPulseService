@@ -45,6 +45,11 @@ public sealed class LoggingSink : IPulseSink, IStatusSink, IControlSink, IAnalog
         Logger.LogInformation("Clock was \x1B[1m\x1B[31mstopped\x1B[39m\x1B[22m.");
         return Task.CompletedTask;
     }
+    public Task SessionIsCompletedAsync()
+    {
+        Logger.LogInformation("Session is \x1B[1m\x1B[31mcompleted\x1B[39m\x1B[22m.");
+        return Task.CompletedTask;
+    }
 
     public Task AnalogueClocksAreFastForwardingAsync()
     {

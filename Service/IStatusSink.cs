@@ -18,4 +18,9 @@ public interface IStatusSink
     /// including before session starts and after end of game session.
     /// </summary>
     public Task ClockIsStoppedAsync();
+
+    /// <summary>
+    /// Called when the session time is ended, and a few seconds after <see cref="ClockIsStoppedAsync"/>.
+    /// </summary>
+    public Task SessionIsCompletedAsync();
 }

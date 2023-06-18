@@ -2,7 +2,7 @@
 
 public partial class PulseGeneratorTests
 {
-    internal class MonitoringPulseSink : IPulseSink
+    internal class MonitoringPulseSink : IPulseSink, IStatusSink
     {
         private readonly List<VoltageChange> voltageChanges = new();
         public IEnumerable<VoltageChange> VoltageChanges => voltageChanges;
@@ -23,6 +23,12 @@ public partial class PulseGeneratorTests
             voltageChanges.Add(new(DateTimeOffset.Now, 0));
             return Task.CompletedTask;
         }
-    }
 
+        public bool IsRunning { get; private set; }
+        public bool IsCompleted { get; private set; }
+        public Task ClockIsStartedAsync() { IsRunning = true; return Task.CompletedTask; }
+        public Task ClockIsStoppedAsync() { IsRunning = false; return Task.CompletedTask; }
+        public Task SessionIsCompletedAsync() { IsRunning = true; IsCompleted = true; return Task.CompletedTask; }
+    }
 }
+

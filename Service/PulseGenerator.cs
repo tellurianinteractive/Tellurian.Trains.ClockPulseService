@@ -20,9 +20,10 @@ public sealed class PulseGenerator : IAsyncDisposable
     public string RemoteClockTimeHref => Settings.RemoteClockTimeHref;
     public int PollIntervalSeconds => Settings.PollIntervalSeconds;
     public int ErrorWaitRetryMilliseconds => Settings.ErrorWaitRetrySeconds * 60;
-    private int AfterSetZeroMilliseconds => GetAfterSetZeroMilliseconds(Settings);
+    private int ZeroDurationMilliseconds => GetZeroDurationMilliseconds(Settings);
+    private int SessionEndedIndicationSeconds => Settings.SessionEndedIndicationSeconds;
 
-    private static int GetAfterSetZeroMilliseconds(PulseGeneratorSettings settings)
+    private static int GetZeroDurationMilliseconds(PulseGeneratorSettings settings)
     {
         const int MinimumMillisecondsAfterSetZero = 250;
         var result = settings.FastForwardIntervalMilliseconds - settings.PulseDurationMilliseconds;
@@ -43,13 +44,21 @@ public sealed class PulseGenerator : IAsyncDisposable
         RestartTime = restartTime;
     }
 
+    /// <summary>
+    /// Main logic to control pulses to an analogue clock from the Fast Clock API (https://fastclock.azurewebsites.net/openapi).
+    /// </summary>
+    /// <param name="status"></param>
+    /// <remarks>
+    /// This method is a good template for any other implementation on other platforms and languages.
+    /// </remarks>
     public async Task Update(ClockStatus status)
     {
         if (!IsInitialized) await InitializeAsync();
         await HandleClockStartAndStop(status);
-        if (ShouldIgnoreStatus(status)) return;
+        if (AnalougueClockShouldNotMove(status)) return;
+
         ServerTime = status.Time.AsTimeOnly(Settings.Use12HourClock);
-        if (AnalogueTime.IsEqualTo(ServerTime, Settings.Use12HourClock))
+        if (AnalogueTime.IsInSyncWith(ServerTime, Settings.Use12HourClock))
         {
         }
         else if (AnalogueTime.IsOneMinuteAfter(ServerTime, Settings.Use12HourClock))
@@ -62,8 +71,8 @@ public sealed class PulseGenerator : IAsyncDisposable
             await FastForward();
         }
 
-        static bool ShouldIgnoreStatus(ClockStatus status) =>
-           status.IsUnavailable || status.IsRealtime || status.IsPaused;
+        static bool AnalougueClockShouldNotMove(ClockStatus status) =>
+           status.IsUnavailable || status.IsRealtime || status.IsPaused || status.IsCompleted;
     }
 
     private async Task InitializeAsync()
@@ -92,6 +101,11 @@ public sealed class PulseGenerator : IAsyncDisposable
         if (status.WasStopped(Previous))
         {
             await Notify<IStatusSink>(NotifyStopped);
+            if (status.IsCompleted)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(SessionEndedIndicationSeconds));
+                await Notify<IStatusSink>(NotifySessionCompleted);
+            }
         }
         else if (status.WasStarted(Previous))
         {
@@ -121,6 +135,17 @@ public sealed class PulseGenerator : IAsyncDisposable
                 Logger.LogError(ex, "Sink {sink} faulted when clock started.", sink.GetType().Name);
             }
         }
+        async Task NotifySessionCompleted(IStatusSink sink)
+        {
+            try
+            {
+                await sink.SessionIsCompletedAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Sink {sink} faulted when session was finished.", sink.GetType().Name);
+            }
+        }
     }
 
     private async Task TryResetAnalogueTime()
@@ -148,7 +173,7 @@ public sealed class PulseGenerator : IAsyncDisposable
         using PeriodicTimer fastTimer = new(TimeSpan.FromMilliseconds(Settings.FastForwardIntervalMilliseconds));
         Logger.LogInformation("\x1B[1m\x1B[33mStart fast forwarding to time: {time}\x1B[39m\x1B[22m", ServerTime.AsString(Settings.Use12HourClock));
         foreach (var sink in Sinks.OfType<IAnalogueClockStatus>()) await sink.AnalogueClocksAreFastForwardingAsync();
-        while (!AnalogueTime.IsEqualTo(ServerTime, Settings.Use12HourClock))
+        while (!AnalogueTime.IsInSyncWith(ServerTime, Settings.Use12HourClock))
         {
             await fastTimer.WaitForNextTickAsync();
             AnalogueTime = await PulseOneMinute(AnalogueTime);
@@ -167,7 +192,7 @@ public sealed class PulseGenerator : IAsyncDisposable
 
         await Task.Delay(Settings.PulseDurationMilliseconds);
         await SetZero();
-        await Task.Delay(AfterSetZeroMilliseconds);
+        await Task.Delay(ZeroDurationMilliseconds);
 
         return updatedTime;
     }

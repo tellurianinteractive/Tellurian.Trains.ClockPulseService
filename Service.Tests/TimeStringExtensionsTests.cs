@@ -66,6 +66,6 @@ public class TimeStringExtensionsTests
     {
         var time = "07:40".AsTimeOnly();
         var other = "07:40".AsTimeOnly();
-        Assert.IsTrue(time.IsEqualTo(other));
+        Assert.IsTrue(time.IsInSyncWith(other));
     }
 }

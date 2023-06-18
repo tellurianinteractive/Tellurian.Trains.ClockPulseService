@@ -12,13 +12,14 @@ public partial class PulseGeneratorTests
     {
         FastForwardIntervalMilliseconds = 200,
         PulseDurationMilliseconds = 100,
-        AnalogueClockStartTime = "06:00"
+        AnalogueClockStartTime = "06:00",
+        SessionEndedIndicationSeconds = 1,
     };
 
     [TestMethod]
     public async Task StatusesNotAffectingClock()
     {
-        var target = CreateTargetWithSink(new FailingPulseSink());
+        var target = CreateTargetWithSinks(new FailingPulseSink());
 
         await target.Update(new() { IsUnavailable = true });
         await target.Update(new() { IsRealtime = true });
@@ -30,7 +31,7 @@ public partial class PulseGeneratorTests
     public async Task RuningClockGeneratesPulses()
     {
         var sink = new MonitoringPulseSink();
-        var target = CreateTargetWithSink(sink);
+        var target = CreateTargetWithSinks(sink);
         var time = "06:00".AsTimeOnly();
         var endTime = "06:06".AsTimeOnly();
         await target.Update(new() { IsRunning = true, Time = time.AsString() });
@@ -52,7 +53,7 @@ public partial class PulseGeneratorTests
     public async Task TimeJumpCausesFastForward()
     {
         var sink = new MonitoringPulseSink();
-        var target = CreateTargetWithSink(sink);
+        var target = CreateTargetWithSinks(sink);
         var newTime = "06:10".AsTimeOnly();
         await target.Update(new() { IsRunning = true, Time = newTime.AsString() });
         Assert.AreEqual("06:10", target.AnalogueTime.AsString());
@@ -60,7 +61,19 @@ public partial class PulseGeneratorTests
         Assert.AreEqual(20, sink.VoltageChanges.Count());
     }
 
-    public static PulseGenerator CreateTargetWithSink(IPulseSink sink) =>
-        new(Settings, new[] { sink, new LoggingSink(NullLogger.Instance) }, NullLogger.Instance, true, "06:00".AsTimeOnly());
+    [TestMethod]
+    public async Task SessionComplete()
+    {
+        var sink = new MonitoringPulseSink();
+        var target = CreateTargetWithSinks(sink);
+        var newTime = "18:00".AsTimeOnly();
+        await target.Update(new() { IsCompleted = true, Time = newTime.AsString() });
+        Assert.AreEqual(true, sink.IsCompleted);
+
+    }
+
+    public static PulseGenerator CreateTargetWithSinks(IPulseSink sink) =>
+            new(Settings, new[] { sink, new LoggingSink(NullLogger.Instance) }, NullLogger.Instance, true, "06:00".AsTimeOnly());
+
 
 }

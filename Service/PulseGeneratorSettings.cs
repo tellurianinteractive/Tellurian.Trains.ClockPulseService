@@ -13,6 +13,7 @@ public sealed class PulseGeneratorSettings
     public int PulseDurationMilliseconds { get; init; }
     public int FastForwardIntervalMilliseconds { get; init; }
     public int ErrorWaitRetrySeconds { get; init; } = 60;
+    public int SessionEndedIndicationSeconds { get; init; } = 5;
     public UdpBroadcastSettings UdpBroadcast { get; set; } = new();
     public SerialPulseSinkSettings SerialPulseSink { get; init; } = new();
     public RpiRelayBoardPulseSinkSettings RpiRelayBoardPulseSink { get; init; } = new();
@@ -41,10 +42,9 @@ public sealed class SerialPulseSinkSettings
 {
     public bool Disabled { get; set; } = true;
     public string PortName { get; set; } = string.Empty;
-    public bool DtrOnly { get; set; } = false;
 
     public override string ToString() =>
-        PortName.IsValidSerialPortName() ? $"Serial pulse sink: {PortName} with DTR-only: {DtrOnly} " : string.Empty;
+        PortName.IsValidSerialPortName() ? $"Serial pulse sink: {PortName}" : string.Empty;
 }
 
 public sealed class RpiRelayBoardPulseSinkSettings

@@ -11,24 +11,18 @@ public sealed class SerialPortSink : IPulseSink, IDisposable
 {
     private SerialPort? Port;
     private readonly ILogger Logger;
-    private readonly bool UseDtrOnly;
     private readonly string PortName;
 
-    public SerialPortSink(string portName, ILogger logger, bool useDtrOnly = false)
+    public SerialPortSink(string portName, ILogger logger)
     {
         PortName = portName;
         Logger = logger;
-        UseDtrOnly = useDtrOnly;
     }
     public Task NegativeVoltageAsync()
     {
         try
         {
-            if (Port is not null)
-                if (UseDtrOnly)
-                    Port.DtrEnable = true;
-                else
-                    Port.RtsEnable = true;
+            if (Port is not null) Port.RtsEnable = true;
         }
         catch (IOException ex)
         {
@@ -69,6 +63,7 @@ public sealed class SerialPortSink : IPulseSink, IDisposable
         {
             Port = new(PortName)
             {
+                Handshake = Handshake.None,
                 RtsEnable = false,
                 DtrEnable = false
             };
@@ -88,6 +83,7 @@ public sealed class SerialPortSink : IPulseSink, IDisposable
         Logger.LogInformation("Serial port pulse sink stopped.");
         return Task.CompletedTask;
     }
+
     public void Dispose() => Port?.Dispose();
 }
 

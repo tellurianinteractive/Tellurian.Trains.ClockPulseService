@@ -19,7 +19,7 @@ public static class TimeStringExtensions
     public static bool IsOneMinuteAfter(this TimeOnly time, TimeOnly other, bool is12Hour = false) =>
         time.IsMinutesAfter(other, 1, is12Hour);
 
-    public static bool IsEqualTo(this TimeOnly time, TimeOnly other, bool is12Hour = false) =>
+    public static bool IsInSyncWith(this TimeOnly time, TimeOnly other, bool is12Hour = false) =>
         time.IsMinutesAfter(other, 0, is12Hour);
 
     public static bool HasToFastForward(this TimeOnly time, TimeOnly other, bool is12Hour = false) =>
