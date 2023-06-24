@@ -100,6 +100,7 @@ public sealed class PulseGenerator : IAsyncDisposable
     {
         if (status.WasStopped(Previous))
         {
+            if (Previous?.IsCompleted == true) return;
             await Notify<IStatusSink>(NotifyStopped);
             if (status.IsCompleted)
             {

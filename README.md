@@ -7,6 +7,9 @@ and creates logical pulses to drive analogue clocks.**
 The alternative is to call the clock API and getting the time. 
 
 ## Release Notes
+Release 1.7.1 at 2023-06-24:
+- **Bug fix** of stopped criteria.
+
 Release 1.7.0 at 2023-06-18:
 - **Rpi Relay Board** sink now uses relay 1 to signal when the clock is stopped
   and relay 2 & 3 to control pulses to clocks.
