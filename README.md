@@ -7,6 +7,10 @@ and creates logical pulses to drive analogue clocks.**
 The alternative is to call the clock API and getting the time. 
 
 ## Release Notes
+Release 1.8.0 at 2023-07-15:
+- **Security update** with latest Microsoft packages.
+- **API update** to latest version of the Fastclock API.
+
 Release 1.7.1 at 2023-06-24:
 - **Bug fix** of stopped criteria.
 
