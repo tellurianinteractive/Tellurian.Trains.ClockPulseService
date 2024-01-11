@@ -7,6 +7,13 @@ and creates logical pulses to drive analogue clocks.**
 The alternative is to call the clock API and getting the time. 
 
 ## Release Notes
+Release 1.9.0 at 2024-01-11:
+- **Upgrade to .NET8** with latest Microsoft packages.
+- **API update** to latest version of the Fastclock API.
+- **Clock started/stopped indication** for the *RPI Relay Board* can now be configured for red/green or alarm indication.
+  - *Red/green* means that the third relay can be used separate indication when clock is running and when stopped.
+  - *Alarm* means that a single attention indication is striggered for a few seconds when clock is started or stopped.
+
 Release 1.8.0 at 2023-07-15:
 - **Security update** with latest Microsoft packages.
 - **API update** to latest version of the Fastclock API.
@@ -91,6 +98,8 @@ so fast-forwarding starts automatically until the analogue clocks also is at
 the session start time.
 Fast-forwarding speed should be determined by the slowest fast-forwarding clock. 
 
+### Start and Stop Indication
+It is possible to indicate when the clock is stopped and started.
 
 ### Support of Hardware
 This is a .NET application that can be compiled to run on most platforms.
@@ -102,16 +111,15 @@ Much of the behaviour is configurable.
 See this [example](https://github.com/fjallemark/ClockPulseService/blob/master/Service/appsettings.json). 
 
 ### Sinks
-A *sink* is a component that translates logical clock signals to some forme of I/O.
+A *sink* is a component that translates logical clock signals to some form of I/O.
 There are some ready-made *sinks*:
-- **UdpBroadcastPulseSink** broadcasts ASCII bytes '+', '-' and '_'.
+- **UdpBroadcastPulseSink** broadcasts ASCII bytes for pulses '+', '-' and '_', for start/stop '|' and '-' and session completed 'X'.
 - **SerialPortPulseSink** sets DTR high for positive voltage, and RTS high for negative voltage. 
 However, it can be configured to use DTR only for both positive and negative voltage.
 - **RpiRelayBoardPulseSink** using three relays to control pulses and polarities.
 The [Rpi Relay Board](https://www.waveshare.com/wiki/RPi_Relay_Board) is a relay hat for *Raspberry Pi*
 that works with this software when running on Linux.
-
-There is also a **LoggingPulseSink** logs to the console.
+- There is also a **LoggingPulseSink** that logs to the console.
 
 ### Deployments
 To run the app locally, see [available deployments](https://onedrive.live.com/?id=DF287081A732D0D8%21302250&cid=DF287081A732D0D8). Select a folder and click download. 
