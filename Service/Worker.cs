@@ -48,7 +48,7 @@ public class Worker : BackgroundService
         }
         if (!settings.RpiRelayBoardPulseSink.Disabled && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            sinks.Add(new RpiRelayBoardSink(new GpioController(), logger));
+            sinks.Add(new RpiRelayBoardSink(new GpioController(), Enum.Parse<ClockStoppedPinUse>(settings.RpiRelayBoardPulseSink.ClockStoppedPinUse), logger));
         }
         if (environment.IsDevelopment())
         {
@@ -58,7 +58,7 @@ public class Worker : BackgroundService
         Timer = new PeriodicTimer(TimeSpan.FromSeconds(PulseGenerator.PollIntervalSeconds));
     }
 
-    static readonly string[] ResetCommands = new[] { "-r", "-t" };
+    static readonly string[] ResetCommands = ["-r", "-t"];
     private static (bool ResetOnStart, TimeOnly RestartTime) CommandLineArgs(string[] args, TimeOnly defaultStartTime)
     {
         var reset = args.Any(arg => arg.IsAnyOf(ResetCommands));

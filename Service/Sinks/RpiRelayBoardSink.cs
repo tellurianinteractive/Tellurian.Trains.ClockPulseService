@@ -2,22 +2,21 @@
 
 namespace Tellurian.Trains.ClockPulseApp.Service.Sinks;
 
-public sealed class RpiRelayBoardSink : IPulseSink, IStatusSink, IControlSink, IDisposable
+public sealed class RpiRelayBoardSink(GpioController controller, ClockStoppedPinUse clockStoppedPinUse, ILogger logger) : IPulseSink, IStatusSink, IControlSink, IDisposable
 {
     const int VoltagePinDelay = 250; // milliseconds
-    public RpiRelayBoardSink(GpioController controller, ILogger logger)
-    {
-        Controller = controller;
-        Logger = logger;
-    }
-    private readonly ILogger Logger;
-    private readonly GpioController Controller;
+    private readonly ILogger Logger = logger;
+    private readonly GpioController Controller = controller;
+    private readonly ClockStoppedPinUse ClockStoppedPinUse = clockStoppedPinUse;
 
     private bool PinsAreNotOpenShouldBeLogged = true;
 
     private const int ClockStoppedPin = 26;
     private const int PositivePin = 20;
     private const int NegativePin = 21;
+
+    private const int ClockStoppedAlarmMilliseconds = 3000;
+    private const int ClockStartedAlarmMilliseconds = 1000;
 
     enum Polarity
     {
@@ -36,7 +35,7 @@ public sealed class RpiRelayBoardSink : IPulseSink, IStatusSink, IControlSink, I
             await Task.Delay(VoltagePinDelay);
             LastKnownPolarity = Polarity.Negative;
         }
-        else 
+        else
             LoggingOncePinsNotOpened();
     }
 
@@ -49,7 +48,7 @@ public sealed class RpiRelayBoardSink : IPulseSink, IStatusSink, IControlSink, I
             await Task.Delay(VoltagePinDelay);
             LastKnownPolarity = Polarity.Positive;
         }
-        else 
+        else
             LoggingOncePinsNotOpened();
     }
 
@@ -59,7 +58,7 @@ public sealed class RpiRelayBoardSink : IPulseSink, IStatusSink, IControlSink, I
         {
             ShortcutClock();
         }
-        else 
+        else
             LoggingOncePinsNotOpened();
         LastKnownPolarity = Polarity.Zero;
         return Task.CompletedTask;
@@ -67,8 +66,8 @@ public sealed class RpiRelayBoardSink : IPulseSink, IStatusSink, IControlSink, I
 
     private void ShortcutClock()
     {
-            if (LastKnownPolarity == Polarity.Negative) Controller.Write(PositivePin, PinValue.Low);
-            else if (LastKnownPolarity == Polarity.Positive) Controller.Write(PositivePin, PinValue.High);
+        if (LastKnownPolarity == Polarity.Negative) Controller.Write(PositivePin, PinValue.Low);
+        else if (LastKnownPolarity == Polarity.Positive) Controller.Write(PositivePin, PinValue.High);
     }
 
     public Task InitializeAsync(TimeOnly analogueTime)
@@ -98,26 +97,46 @@ public sealed class RpiRelayBoardSink : IPulseSink, IStatusSink, IControlSink, I
         Logger.LogInformation("Stopped {sink}", nameof(RpiRelayBoardSink));
     }
 
-    public Task ClockIsStartedAsync()
+    public async Task ClockIsStartedAsync()
     {
         if (ArePinsOpen)
         {
-            Controller.Write(ClockStoppedPin, PinValue.High);
+            switch (ClockStoppedPinUse)
+            {
+                case ClockStoppedPinUse.Alarm:
+                    Controller.Write(ClockStoppedPin, PinValue.High);
+                    await Task.Delay(ClockStartedAlarmMilliseconds);
+                    Controller.Write(ClockStoppedPin, PinValue.Low);
+                    break;
+                default:
+                    Controller.Write(ClockStoppedPin, PinValue.High);
+                    break;
+            }
         }
         else
             LoggingOncePinsNotOpened();
-        return Task.CompletedTask;
+        return;
     }
 
-    public Task ClockIsStoppedAsync()
+    public async Task ClockIsStoppedAsync()
     {
         if (ArePinsOpen)
         {
-            Controller.Write(ClockStoppedPin, PinValue.Low);
+            switch (ClockStoppedPinUse)
+            {
+                case ClockStoppedPinUse.Alarm:
+                    Controller.Write(ClockStoppedPin, PinValue.High);
+                    await Task.Delay(ClockStoppedAlarmMilliseconds);
+                    Controller.Write(ClockStoppedPin, PinValue.Low);
+                    break;
+                default:
+                    Controller.Write(ClockStoppedPin, PinValue.Low);
+                    break;
+            }
         }
         else
             LoggingOncePinsNotOpened();
-        return Task.CompletedTask;
+        return;
     }
 
     public Task SessionIsCompletedAsync()
@@ -152,9 +171,15 @@ public sealed class RpiRelayBoardSink : IPulseSink, IStatusSink, IControlSink, I
 public interface IGpioController : IDisposable
 {
     void OpenPin(int pinNumber, PinMode pinMode, PinValue pinValue);
-    void Write(int pinNumber,  PinValue pinValue);
+    void Write(int pinNumber, PinValue pinValue);
     void ClosePin(int pinNumber);
     bool IsPinOpen(int pinNumber);
+}
+
+public enum ClockStoppedPinUse
+{
+    RedGreen = 0, // Relay pin is Low = Red: clock is stopped, High = Green: clock is running
+    Alarm = 1 // Pin is low for a few seconds when clock is stopped or started.
 }
 
 

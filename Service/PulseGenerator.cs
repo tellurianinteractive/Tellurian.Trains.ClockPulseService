@@ -3,17 +3,17 @@ using Tellurian.Trains.MeetingApp.Contracts;
 
 namespace Tellurian.Trains.ClockPulseApp.Service;
 
-public sealed class PulseGenerator : IAsyncDisposable
+public sealed class PulseGenerator(PulseGeneratorSettings settings, IEnumerable<IPulseSink> sinks, ILogger logger, bool resetOnStart, TimeOnly restartTime) : IAsyncDisposable
 {
     private const string LastAnalogueTimeFileName = "AnalogueTime.txt";
 
-    private readonly ILogger Logger;
-    private readonly PulseGeneratorSettings Settings;
-    private readonly IEnumerable<IPulseSink> Sinks;
-    private readonly bool ResetOnStart;
-    private readonly TimeOnly RestartTime;
+    private readonly ILogger Logger = logger;
+    private readonly PulseGeneratorSettings Settings = settings;
+    private readonly IEnumerable<IPulseSink> Sinks = sinks;
+    private readonly bool ResetOnStart = resetOnStart;
+    private readonly TimeOnly RestartTime = restartTime;
     private bool IsInitialized;
-    private bool CanWriteFiles;
+    private bool CanWriteFiles = true;
 
     public TimeOnly ServerTime { get; private set; }
     public TimeOnly AnalogueTime { get; private set; }
@@ -34,15 +34,6 @@ public sealed class PulseGenerator : IAsyncDisposable
     private ClockStatus? Previous;
 
     public IEnumerable<string> InstalledSinksTypes => Sinks.Select(s => s.GetType().Name);
-    public PulseGenerator(PulseGeneratorSettings settings, IEnumerable<IPulseSink> sinks, ILogger logger, bool resetOnStart, TimeOnly restartTime)
-    {
-        Settings = settings;
-        Sinks = sinks;
-        Logger = logger;
-        CanWriteFiles = true;
-        ResetOnStart = resetOnStart;
-        RestartTime = restartTime;
-    }
 
     /// <summary>
     /// Main logic to control pulses to an analogue clock from the Fast Clock API (https://fastclock.azurewebsites.net/openapi).

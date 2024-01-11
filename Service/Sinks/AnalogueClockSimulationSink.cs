@@ -1,18 +1,12 @@
 ﻿using Tellurian.Trains.ClockPulseApp.Service.Extensions;
 
 namespace Tellurian.Trains.ClockPulseApp.Service.Sinks;
-internal class AnalogueClockSimulationSink : IPulseSink
+internal class AnalogueClockSimulationSink(TimeOnly initialTime, ILogger logger) : IPulseSink
 {
-    private TimeOnly Time;
+    private TimeOnly Time = initialTime;
     private const bool Is12Hour = true;
 
-    public ILogger Logger { get; }
-
-    public AnalogueClockSimulationSink(TimeOnly initialTime, ILogger logger)
-    {
-        Time = initialTime;
-        Logger = logger;
-    }
+    public ILogger Logger { get; } = logger;
 
     public Task PositiveVoltageAsync()
     {

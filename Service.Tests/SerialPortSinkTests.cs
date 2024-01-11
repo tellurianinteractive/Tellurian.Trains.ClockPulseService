@@ -51,7 +51,5 @@ public class SerialPortSinkTests
         }
     }
 
-
-
-    bool IsSerialPortAvailable(string portName) => SerialPort.GetPortNames().Contains(portName);
+    static bool IsSerialPortAvailable(string portName) => SerialPort.GetPortNames().Contains(portName);
 }

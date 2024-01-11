@@ -4,7 +4,7 @@ public partial class PulseGeneratorTests
 {
     internal class MonitoringPulseSink : IPulseSink, IStatusSink
     {
-        private readonly List<VoltageChange> voltageChanges = new();
+        private readonly List<VoltageChange> voltageChanges = [];
         public IEnumerable<VoltageChange> VoltageChanges => voltageChanges;
         public Task NegativeVoltageAsync()
         {

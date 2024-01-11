@@ -1,10 +1,8 @@
 ﻿namespace Tellurian.Trains.ClockPulseApp.Service.Sinks;
 
-public sealed class LoggingSink : IPulseSink, IStatusSink, IControlSink, IAnalogueClockStatus
+public sealed class LoggingSink(ILogger logger) : IPulseSink, IStatusSink, IControlSink, IAnalogueClockStatus
 {
-    public LoggingSink(ILogger logger) => Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    private readonly ILogger Logger;
+    private readonly ILogger Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     public Task NegativeVoltageAsync()
     {
         Logger.LogInformation("\x1B[1m\x1B[31mNegative voltage\x1B[39m\x1B[22m");

@@ -7,17 +7,12 @@ namespace Tellurian.Trains.ClockPulseApp.Service.Sinks;
 /// While RTS remains high a positive clock voltage should be on.
 /// While DTR remains high a negative clock voltage should be on.
 /// </summary>
-public sealed class SerialPortSink : IPulseSink, IDisposable
+public sealed class SerialPortSink(string portName, ILogger logger) : IPulseSink, IDisposable
 {
     private SerialPort? Port;
-    private readonly ILogger Logger;
-    private readonly string PortName;
+    private readonly ILogger Logger = logger;
+    private readonly string PortName = portName;
 
-    public SerialPortSink(string portName, ILogger logger)
-    {
-        PortName = portName;
-        Logger = logger;
-    }
     public Task NegativeVoltageAsync()
     {
         try
@@ -90,6 +85,6 @@ public sealed class SerialPortSink : IPulseSink, IDisposable
 public static class SerialPulseSinkExtensions
 {
     public static bool IsValidSerialPortName(this string? name) =>
-        !string.IsNullOrWhiteSpace(name) && name.ToUpperInvariant().StartsWith("COM");
+        !string.IsNullOrWhiteSpace(name) && name.ToUpperInvariant().StartsWith("COM", StringComparison.OrdinalIgnoreCase);
 }
 

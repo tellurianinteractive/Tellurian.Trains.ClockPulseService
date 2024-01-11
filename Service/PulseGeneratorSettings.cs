@@ -50,6 +50,7 @@ public sealed class SerialPulseSinkSettings
 public sealed class RpiRelayBoardPulseSinkSettings
 {
     public bool Disabled { get; set; } = true;
+    public string ClockStoppedPinUse { get; set; } = Sinks.ClockStoppedPinUse.RedGreen.ToString();
     public override string ToString() => "RPI Relay Board: no specific setting";
 }
 
