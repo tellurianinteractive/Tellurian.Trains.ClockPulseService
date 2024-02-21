@@ -63,7 +63,7 @@ public sealed class PulseGenerator(PulseGeneratorSettings settings, IEnumerable<
         }
 
         static bool AnalougueClockShouldNotMove(ClockStatus status) =>
-           status.IsUnavailable || status.IsRealtime || status.IsPaused || status.IsCompleted;
+           status.IsUnavailable || status.IsRealtime || status.IsPaused || status.IsBreak || status.IsCompleted;
     }
 
     private async Task InitializeAsync()

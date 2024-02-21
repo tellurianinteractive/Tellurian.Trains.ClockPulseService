@@ -7,6 +7,10 @@ and creates logical pulses to drive analogue clocks.**
 The alternative is to call the clock API and getting the time. 
 
 ## Release Notes
+Release 1.10.0 at 2024-02-21:
+- **Upgrade to .NET8** with latest Microsoft packages.
+- **API update** to latest version of the Fastclock API to handle *session break*.
+
 Release 1.9.0 at 2024-01-11:
 - **Upgrade to .NET8** with latest Microsoft packages.
 - **API update** to latest version of the Fastclock API.

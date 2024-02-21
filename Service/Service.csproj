@@ -1,35 +1,39 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>Tellurian.Trains.ClockPulseApp.Service</RootNamespace>
-    <AssemblyName>Tellurian.Trains.ClockPulseApp.Service</AssemblyName>
-    <UserSecretsId>dotnet-Service-32E57495-7D30-4F2C-9B1D-C42CC55595EC</UserSecretsId>
-  </PropertyGroup>
-  <PropertyGroup>
-    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
-    <IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
-    <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
-  </PropertyGroup>
-  <ItemGroup>
-    <None Remove="AnalogueTime.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <_WebToolingArtifacts Remove="Properties\PublishProfiles\linux-arm-32.pubxml" />
-    <_WebToolingArtifacts Remove="Properties\PublishProfiles\linux-arm-64.pubxml" />
-    <_WebToolingArtifacts Remove="Properties\PublishProfiles\win-arm64.pubxml" />
-    <_WebToolingArtifacts Remove="Properties\PublishProfiles\win-x64.pubxml" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="System.Device.Gpio" Version="3.1.0" />
-    <PackageReference Include="Tellurian.Trains.MeetingApp.Contracts" Version="3.5.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-    <PackageReference Include="System.IO.Ports" Version="8.0.0" />
-  </ItemGroup>
-  <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <DebugSymbols>False</DebugSymbols>
-    <DebugType>None</DebugType>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(Configuration)' == 'Release'">
-    <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<RootNamespace>Tellurian.Trains.ClockPulseApp.Service</RootNamespace>
+		<AssemblyName>Tellurian.Trains.ClockPulseApp.Service</AssemblyName>
+		<UserSecretsId>dotnet-Service-32E57495-7D30-4F2C-9B1D-C42CC55595EC</UserSecretsId>
+	</PropertyGroup>
+	<PropertyGroup>
+		<IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
+		<IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
+		<IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
+
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+		<BlazorWebAssemblyOmitDebugProxyOutput>true</BlazorWebAssemblyOmitDebugProxyOutput>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Remove="AnalogueTime.txt" />
+	</ItemGroup>
+	<ItemGroup>
+		<_WebToolingArtifacts Remove="Properties\PublishProfiles\linux-arm-32.pubxml" />
+		<_WebToolingArtifacts Remove="Properties\PublishProfiles\linux-arm-64.pubxml" />
+		<_WebToolingArtifacts Remove="Properties\PublishProfiles\win-arm64.pubxml" />
+		<_WebToolingArtifacts Remove="Properties\PublishProfiles\win-x64.pubxml" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="System.Device.Gpio" Version="3.1.0" />
+		<PackageReference Include="Tellurian.Trains.MeetingApp.Contracts" Version="3.6.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+		<PackageReference Include="System.IO.Ports" Version="8.0.0" />
+	</ItemGroup>
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<DebugSymbols>False</DebugSymbols>
+		<DebugType>None</DebugType>
+	</PropertyGroup>
+	<ItemGroup Condition="'$(Configuration)' == 'Release'">
+		<Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
+	</ItemGroup>
 </Project>
