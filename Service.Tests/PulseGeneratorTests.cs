@@ -73,7 +73,7 @@ public partial class PulseGeneratorTests
     }
 
     public static PulseGenerator CreateTargetWithSinks(IPulseSink sink) =>
-            new(Settings, new[] { sink, new LoggingSink(NullLogger.Instance) }, NullLogger.Instance, true, "06:00".AsTimeOnly());
+            new(Settings, [sink, new LoggingSink(NullLogger.Instance)], NullLogger.Instance, true, "06:00".AsTimeOnly());
 
 
 }

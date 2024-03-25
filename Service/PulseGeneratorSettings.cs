@@ -1,11 +1,17 @@
 ﻿using System.Text;
+using System.Web;
 using Tellurian.Trains.ClockPulseApp.Service.Sinks;
 
 namespace Tellurian.Trains.ClockPulseApp.Service;
 
 public sealed class PulseGeneratorSettings
 {
-    public string RemoteClockTimeHref { get; set; } = string.Empty;
+    public string ClockName { get; set; } = "Demo";
+    public string RemoteClockServerHref { get; set; } = "https://fastclock.azurewebsites.net";
+    public string LocalClockServerHref { get; set; } = "http://localhost:5000";
+    public bool UseRemoteClock { get; set; }
+    public string ClockTimeHref => $"{ClockServerHref}/api/clocks/{HttpUtility.UrlEncode(ClockName)}/time?user=Analogue%20Clocks";
+    private string ClockServerHref => UseRemoteClock ? RemoteClockServerHref : LocalClockServerHref;
     public string AnalogueClockStartTime { get; set; } = "06:00";
     public bool Use12HourClock { get; set; } = false;
     public bool FlipPolarity { get; set; } = false;
@@ -20,7 +26,7 @@ public sealed class PulseGeneratorSettings
     public override string ToString()
     {
         var text = new StringBuilder(200);
-        text.AppendLine($"Remote clock time href: {RemoteClockTimeHref}");
+        text.AppendLine($"Clock time href: {ClockTimeHref}");
         text.AppendLine($"Poll interval seconds: {PollIntervalSeconds}");
         text.AppendLine($"Analogue clock start time: {AnalogueClockStartTime}");
         text.AppendLine($"Use 12 hour clock: {Use12HourClock}");

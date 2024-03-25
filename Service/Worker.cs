@@ -50,10 +50,6 @@ public class Worker : BackgroundService
         {
             sinks.Add(new RpiRelayBoardSink(new GpioController(), Enum.Parse<ClockStoppedPinUse>(settings.RpiRelayBoardPulseSink.ClockStoppedPinUse), logger));
         }
-        if (environment.IsDevelopment())
-        {
-            sinks.Add(new AnalogueClockSimulationSink(AnalogueClockStartTime, logger));
-        }
         PulseGenerator = new PulseGenerator(settings, sinks, Logger, ResetOnStart, AnalogueClockStartTime);
         Timer = new PeriodicTimer(TimeSpan.FromSeconds(PulseGenerator.PollIntervalSeconds));
     }

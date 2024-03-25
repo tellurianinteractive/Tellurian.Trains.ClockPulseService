@@ -7,6 +7,13 @@ and creates logical pulses to drive analogue clocks.**
 The alternative is to call the clock API and getting the time. 
 
 ## Release Notes
+Release 1.11.0 at 2024-03-25:
+- **Simplified settings**, where you only sets *clock name* and optionally set if cloud clock shoud be used.
+  > NOTE that the *RemoteClockTimeHref* is now obsolete and replaced by new settings in *appsettings.json*,
+so you need to update this file.
+- **Better documentation** in the *appsettings.json* file.
+- **Updated wiring** of the *RPI Relay Board*.
+
 Release 1.10.0 at 2024-02-21:
 - **Upgrade to .NET8** with latest Microsoft packages.
 - **API update** to latest version of the Fastclock API to handle *session break*.
@@ -126,7 +133,7 @@ that works with this software when running on Linux.
 - There is also a **LoggingPulseSink** that logs to the console.
 
 ### Deployments
-To run the app locally, see [available deployments](https://onedrive.live.com/?id=DF287081A732D0D8%21302250&cid=DF287081A732D0D8). Select a folder and click download. 
+To run the app locally, see [available deployments](https://1drv.ms/f/s!AtjQMqeBcCjfkq0vHG6OgvBkE6GTKg?e=wU982K). Select a folder and click download. 
 It will be downloaded as a ZIP-file. Unzip and transfer to the computer you will run it on.
 
 ### Some Experiences

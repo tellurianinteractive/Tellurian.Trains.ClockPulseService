@@ -17,7 +17,7 @@ public sealed class PulseGenerator(PulseGeneratorSettings settings, IEnumerable<
 
     public TimeOnly ServerTime { get; private set; }
     public TimeOnly AnalogueTime { get; private set; }
-    public string RemoteClockTimeHref => Settings.RemoteClockTimeHref;
+    public string RemoteClockTimeHref => Settings.ClockTimeHref;
     public int PollIntervalSeconds => Settings.PollIntervalSeconds;
     public int ErrorWaitRetryMilliseconds => Settings.ErrorWaitRetrySeconds * 60;
     private int ZeroDurationMilliseconds => GetZeroDurationMilliseconds(Settings);
