@@ -77,7 +77,3 @@ for that relay board, and have now run it on the Raspberry Pi to test it out, an
 
 With the software, it is also possible to directly use the I/O-pins on the Raspberry Pi without the relay board. 
 This is fine if another device controlling the clock only needs low current I/O. 
-
-### Discussions
-In [this discussion on GitHub](https://github.com/tellurianinteractive/Tellurian.Trains.ModuleMeetingApp/discussions/44), 
-there are many ideas of how to translate a stream of times to pulses for controlling an pulsedriven analogue clock.
