@@ -12,6 +12,19 @@ logic translating time to pulses in other software.
 This software also automatically *fast-forward* the pulsing if the analogue time is not 
 same or one minute after master clock time.
 
+## Working Solution
+During March 2022, I started to make [Clock Pulse Service](https://github.com/fjallemark/ClockPulseService) 
+for polling the [clock API](https://github.com/tellurianinteractive/Tellurian.Trains.ModuleMeetingApp/wiki/API-Guidelines) 
+and generate data about pulses to send. 
+I also bought a [RPi Relay Board](https://www.waveshare.com/wiki/RPi_Relay_Board) 
+and mounted it om my old Raspberry Pi 2. 
+Then I wrote an implementation of [IPulseSink](https://github.com/fjallemark/ClockPulseService/blob/master/Service/RpiRelayBoardPulseSink.cs) 
+for that relay board, and had it to run on the Raspberry Pi to test it out, and after some adjustments, it seems to work as expected.
+
+### Get the Software
+To run the app locally, see [available deployments](https://1drv.ms/f/s!AtjQMqeBcCjfkrkqVoRqBs5BIzpQiw?e=TvT6Bi). Select a folder and click download. 
+It will be downloaded as a ZIP-file. Unzip and transfer to the computer you will run it on.
+
 ### Running the Software
 This application must be run on a computer with an I/O device that can 
 be connected to analouge clocks in the hall, for example a RUT-socket.
@@ -21,7 +34,8 @@ but if you run the *fastclock server* locally,
 you can run both this application and the *fastclock server* on the same computer,
 for example on a Raspberry Pi.
 
-### From Clock API to Pulses 
+
+## From Clock API to Pulses 
 The main logic of this application makes frequent calls to the *Fasclock API*
 and determines when pulses to analogue clocks should be changed.
 The logical pulses are:
@@ -62,22 +76,3 @@ The [Rpi Relay Board](https://www.waveshare.com/wiki/RPi_Relay_Board) is a relay
 that works with this software when running on Linux.
 - There is also a **LoggingPulseSink** that logs to the console.
 
-### Deployments
-To run the app locally, see [available deployments](https://1drv.ms/f/s!AtjQMqeBcCjfkrkqVoRqBs5BIzpQiw?e=TvT6Bi). Select a folder and click download. 
-It will be downloaded as a ZIP-file. Unzip and transfer to the computer you will run it on.
-
-### Some Experiences
-During March 2022, I started to make [Clock Pulse Service](https://github.com/fjallemark/ClockPulseService) 
-for polling the [clock API](https://github.com/tellurianinteractive/Tellurian.Trains.ModuleMeetingApp/wiki/API-Guidelines) 
-and generate data about pulses to send. 
-I also bought a [RPi Relay Board](https://www.waveshare.com/wiki/RPi_Relay_Board) 
-and mounted it om my old Raspberry Pi 2. 
-Then I wrote an implementation of [IPulseSink](https://github.com/fjallemark/ClockPulseService/blob/master/Service/RpiRelayBoardPulseSink.cs) 
-for that relay board, and have now run it on the Raspberry Pi to test it out, and after some adjustments, it seems to work as expected.
-
-With the software, it is also possible to directly use the I/O-pins on the Raspberry Pi without the relay board. 
-This is fine if another device controlling the clock only needs low current I/O. 
-
-### Discussions
-In [this discussion on GitHub](https://github.com/tellurianinteractive/Tellurian.Trains.ModuleMeetingApp/discussions/44), 
-there are many ideas of how to translate a stream of times to pulses for controlling an pulsedriven analogue clock.
