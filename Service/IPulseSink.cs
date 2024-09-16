@@ -9,11 +9,11 @@
 public interface IPulseSink
 { 
     /// <summary>
-    /// Called when a clock pulse with reversed polarity should be started. 
+    /// Called when a clock pulse with straight polarity should be started. 
     /// </summary>
     public Task PositiveVoltageAsync();
     /// <summary>
-    /// Called when a clock pulse with straight polarity should be started. 
+    /// Called when a clock pulse with reversed polarity should be started. 
     /// </summary>
     public Task NegativeVoltageAsync();
     /// <summary>

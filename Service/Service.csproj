@@ -24,8 +24,9 @@
 		<_WebToolingArtifacts Remove="Properties\PublishProfiles\win-x64.pubxml" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="System.Device.Gpio" Version="3.1.0" />
-		<PackageReference Include="Tellurian.Trains.MeetingApp.Contracts" Version="3.6.1" />
+		<PackageReference Include="System.Device.Gpio" Version="3.2.0" />
+		<PackageReference Include="System.Text.Json" Version="8.0.4" />
+		<PackageReference Include="Tellurian.Trains.MeetingApp.Contracts" Version="3.6.2" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
 		<PackageReference Include="System.IO.Ports" Version="8.0.0" />
 	</ItemGroup>

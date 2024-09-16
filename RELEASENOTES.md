@@ -1,4 +1,6 @@
 # Release Notes
+## Release 1.12.0
+. **Security update** with latest external components.
 ## Release 1.11.0
 Release date 2024-03-25:
 - **Simplified settings**, where you only sets *clock name* and optionally set if cloud clock shoud be used.

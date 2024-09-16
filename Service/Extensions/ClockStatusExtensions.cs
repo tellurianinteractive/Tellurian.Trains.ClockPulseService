@@ -1,5 +1,4 @@
-﻿using System.Net.NetworkInformation;
-using Tellurian.Trains.MeetingApp.Contracts;
+﻿using Tellurian.Trains.MeetingApp.Contracts;
 
 namespace Tellurian.Trains.ClockPulseApp.Service.Extensions;
 internal static class ClockStatusExtensions
