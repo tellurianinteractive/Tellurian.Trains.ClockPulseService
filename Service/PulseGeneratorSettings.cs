@@ -23,6 +23,7 @@ public sealed class PulseGeneratorSettings
     public UdpBroadcastSettings UdpBroadcast { get; set; } = new();
     public SerialPulseSinkSettings SerialPulseSink { get; init; } = new();
     public RpiRelayBoardPulseSinkSettings RpiRelayBoardPulseSink { get; init; } = new();
+    public ZNServerSettings ZNServer { get; init; } = new();
     public override string ToString()
     {
         var text = new StringBuilder(200);
@@ -58,6 +59,17 @@ public sealed class RpiRelayBoardPulseSinkSettings
     public bool Disabled { get; set; } = true;
     public string ClockStoppedPinUse { get; set; } = Sinks.ClockStoppedPinUse.RedGreen.ToString();
     public override string ToString() => "RPI Relay Board: no specific setting";
+}
+
+public sealed class ZNServerSettings
+{
+    public bool Disabled { get; set; } = true;
+    public string DiscoveryIPAddress { get; set; } = "255.255.255.255";
+    public int DiscoveryPort { get; set; } = 57111;
+    public string StationCode { get; set; } = "HBF"; // 3-letter station code
+    public string StationName { get; set; } = "Hauptbahnhof"; // Full station name
+
+    public override string ToString() => $"ZNServer Discovery: {DiscoveryIPAddress}:{DiscoveryPort}, Station: {StationCode}";
 }
 
 
