@@ -37,32 +37,44 @@ public sealed class ZNServerSink : IPulseSink, IControlSink, IStatusSink, IDispo
 
     private async Task DiscoverZNServer()
     {
+        if (Settings.Disabled) return;
         try
         {
             var discoveryMessage = "ZNSERVER?"u8.ToArray();
             var broadcastEndpoint = new IPEndPoint(IPAddress.Parse(Settings.DiscoveryIPAddress), Settings.DiscoveryPort);
-            await BroadcastClient.SendAsync(discoveryMessage, discoveryMessage.Length, broadcastEndpoint);
-
-            var receiveTask = BroadcastClient.ReceiveAsync();
-            if (await Task.WhenAny(receiveTask, Task.Delay(5000)) == receiveTask)
+            var timeout = DateTime.UtcNow.AddSeconds(5);
+            while (DateTime.UtcNow < timeout && !IsDisposed && ZNServerEndPoint == null)
             {
-                var result = await receiveTask;
-                var ZNresponse = System.Text.Encoding.UTF8.GetString(result.Buffer);
-                if (ZNresponse.StartsWith("ZNSERVERPORT:"))
+                await BroadcastClient.SendAsync(discoveryMessage, discoveryMessage.Length, broadcastEndpoint);
+                var receiveTask = BroadcastClient.ReceiveAsync();
+                if (await Task.WhenAny(receiveTask, Task.Delay(500)) == receiveTask)
                 {
-                    var portStr = ZNresponse.Substring("ZNSERVERPORT:".Length);
-                    if (int.TryParse(portStr, out var port))
+                    var result = await receiveTask;
+                    var ZNresponse = System.Text.Encoding.UTF8.GetString(result.Buffer);
+                    if (ZNresponse.StartsWith("ZNSERVERPORT:"))
                     {
-                        ZNServerEndPoint = new IPEndPoint(result.RemoteEndPoint.Address, port);
-                        Logger.LogInformation("ZNServer discovered at {address}:{port}", 
-                            ZNServerEndPoint.Address, ZNServerEndPoint.Port);
-                        await SendIdMessage();
+                        var portStr = ZNresponse.Substring("ZNSERVERPORT:".Length);
+                        if (int.TryParse(portStr, out var port))
+                        {
+                            ZNServerEndPoint = new IPEndPoint(result.RemoteEndPoint.Address, port);
+                            Logger.LogInformation("ZNServer discovered at {address}:{port}", 
+                                ZNServerEndPoint.Address, ZNServerEndPoint.Port);
+                            await SendIdMessage();
+                            break;
+                        }
+                        else
+                        {
+                            Logger.LogWarning("Received invalid port in ZNServer response: {response}", ZNresponse);
+                            // Immediately retry
+                            continue;
+                        }
                     }
                 }
-            }
-            else
-            {
-                Logger.LogWarning("No ZNServer response received within timeout");
+                else
+                {
+                    Logger.LogWarning("No ZNServer response received within timeout");
+                    break;
+                }
             }
         }
         catch (Exception ex)
