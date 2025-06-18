@@ -47,10 +47,10 @@ public sealed class ZNServerSink : IPulseSink, IControlSink, IStatusSink, IDispo
             if (await Task.WhenAny(receiveTask, Task.Delay(5000)) == receiveTask)
             {
                 var result = await receiveTask;
-                var response = System.Text.Encoding.UTF8.GetString(result.Buffer);
-                if (response.StartsWith("ZNSERVERPORT:"))
+                var ZNresponse = System.Text.Encoding.UTF8.GetString(result.Buffer);
+                if (ZNresponse.StartsWith("ZNSERVERPORT:"))
                 {
-                    var portStr = response.Substring("ZNSERVERPORT:".Length);
+                    var portStr = ZNresponse.Substring("ZNSERVERPORT:".Length);
                     if (int.TryParse(portStr, out var port))
                     {
                         ZNServerEndPoint = new IPEndPoint(result.RemoteEndPoint.Address, port);
