@@ -1,22 +1,20 @@
 using System.Net;
 using System.Net.Sockets;
-using Microsoft.Extensions.Logging;
-using Tellurian.Trains.MeetingApp.Contracts;
-
 namespace Tellurian.Trains.ClockPulseApp.Service.Sinks;
+
 
 public sealed class ZNServerSink : IPulseSink, IControlSink, IStatusSink, IDisposable
 {
     private readonly ILogger Logger;
     private readonly UdpClient BroadcastClient;
-    private readonly ZNServerSettings Settings;
+    private readonly ZNServerSinkSettings Settings;
     private IPEndPoint? ZNServerEndPoint;
     private bool IsDisposed;
     private DateTimeOffset lastMessageTime;
     private const int CONNECTION_TIMEOUT_MINUTES = 5;
     private Timer? connectionMonitorTimer;
 
-    public ZNServerSink(ZNServerSettings settings, ILogger logger)
+    public ZNServerSink(ZNServerSinkSettings settings, ILogger logger)
     {
         Settings = settings ?? throw new ArgumentNullException(nameof(settings));
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));

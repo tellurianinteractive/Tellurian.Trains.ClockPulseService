@@ -1,6 +1,12 @@
 # Release Notes
+## Release 1.13.0
+Release date 2025-06-24
+- **Upgrade to .NET9** with latest Microsoft packages.
+- **ZNServerSink** added. Thanks to Dirkjan Kaper.
+- **UdpBroadcast** sink renamed to **UdpBroadcastSink**. If you use this sink, the name change is a ***breaking change***. You need to change the name in *appsettings.json*.
 ## Release 1.12.0
-. **Security update** with latest external components.
+Release date 2025-09-16
+- **Security update** with latest external components.
 ## Release 1.11.0
 Release date 2024-03-25:
 - **Simplified settings**, where you only sets *clock name* and optionally set if cloud clock shoud be used.

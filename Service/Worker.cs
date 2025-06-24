@@ -42,17 +42,17 @@ public class Worker : BackgroundService
         {
             sinks.Add(new SerialPortSink(settings.SerialPulseSink.PortName, Logger));
         }
-        if (!settings.UdpBroadcast.Disabled && IPAddress.TryParse(settings.UdpBroadcast.IPAddress, out var iPAddress))
+        if (!settings.UdpBroadcastSink.Disabled && IPAddress.TryParse(settings.UdpBroadcastSink.IPAddress, out var iPAddress))
         {
-            sinks.Add(new UdpBroadcastSink(new IPEndPoint(iPAddress, settings.UdpBroadcast.PortNumber), logger));
+            sinks.Add(new UdpBroadcastSink(new IPEndPoint(iPAddress, settings.UdpBroadcastSink.PortNumber), logger));
         }
         if (!settings.RpiRelayBoardPulseSink.Disabled && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             sinks.Add(new RpiRelayBoardSink(new GpioController(), Enum.Parse<ClockStoppedPinUse>(settings.RpiRelayBoardPulseSink.ClockStoppedPinUse), logger));
         }
-        if (!settings.ZNServer.Disabled)
+        if (!settings.ZNServerSink.Disabled)
         {
-            sinks.Add(new ZNServerSink(settings.ZNServer, logger));
+            sinks.Add(new ZNServerSink(settings.ZNServerSink, logger));
         }
         PulseGenerator = new PulseGenerator(settings, sinks, Logger, ResetOnStart, AnalogueClockStartTime);
         Timer = new PeriodicTimer(TimeSpan.FromSeconds(PulseGenerator.PollIntervalSeconds));

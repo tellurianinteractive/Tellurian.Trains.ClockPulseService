@@ -74,5 +74,6 @@ However, it can be configured to use DTR only for both positive and negative vol
 - **RpiRelayBoardPulseSink** using three relays to control pulses and polarities.
 The [Rpi Relay Board](https://www.waveshare.com/wiki/RPi_Relay_Board) is a relay hat for *Raspberry Pi*
 that works with this software when running on Linux.
+- **ZNServerSink** for providing time to the [*Zugnummern Meldeanlagen*](https://bmertins.de/FREMO/ZN/index.html). This sink is created by Dirkjan Kaper.
 - There is also a **LoggingPulseSink** that logs to the console.
 

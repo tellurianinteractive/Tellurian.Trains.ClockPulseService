@@ -20,10 +20,10 @@ public sealed class PulseGeneratorSettings
     public int FastForwardIntervalMilliseconds { get; init; }
     public int ErrorWaitRetrySeconds { get; init; } = 60;
     public int SessionEndedIndicationSeconds { get; init; } = 5;
-    public UdpBroadcastSettings UdpBroadcast { get; set; } = new();
+    public UdpBroadcastSettings UdpBroadcastSink { get; set; } = new();
     public SerialPulseSinkSettings SerialPulseSink { get; init; } = new();
     public RpiRelayBoardPulseSinkSettings RpiRelayBoardPulseSink { get; init; } = new();
-    public ZNServerSettings ZNServer { get; init; } = new();
+    public ZNServerSinkSettings ZNServerSink { get; init; } = new();
     public override string ToString()
     {
         var text = new StringBuilder(200);
@@ -61,7 +61,7 @@ public sealed class RpiRelayBoardPulseSinkSettings
     public override string ToString() => "RPI Relay Board: no specific setting";
 }
 
-public sealed class ZNServerSettings
+public sealed class ZNServerSinkSettings
 {
     public bool Disabled { get; set; } = true;
     public string DiscoveryIPAddress { get; set; } = "255.255.255.255";
