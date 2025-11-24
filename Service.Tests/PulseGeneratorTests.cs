@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tellurian.Trains.ClockPulseApp.Service.Extensions;
 using Tellurian.Trains.ClockPulseApp.Service.Sinks;
 
@@ -37,7 +36,7 @@ public partial class PulseGeneratorTests
         await target.Update(new() { IsRunning = true, Time = time.AsString() });
         while (time < endTime)
         {
-            await Task.Delay(75);
+            await Task.Delay(75, TestContext.CancellationToken);
             time = time.Add(TimeSpan.FromMinutes(1));
             await target.Update(new() { IsRunning = true, Time = time.AsString() });
         }
@@ -68,12 +67,12 @@ public partial class PulseGeneratorTests
         var target = CreateTargetWithSinks(sink);
         var newTime = "18:00".AsTimeOnly();
         await target.Update(new() { IsCompleted = true, Time = newTime.AsString() });
-        Assert.AreEqual(true, sink.IsCompleted);
+        Assert.IsTrue(sink.IsCompleted);
 
     }
 
     public static PulseGenerator CreateTargetWithSinks(IPulseSink sink) =>
             new(Settings, [sink, new LoggingSink(NullLogger.Instance)], NullLogger.Instance, true, "06:00".AsTimeOnly());
 
-
+    public TestContext TestContext { get; set; }
 }

@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Tellurian.Trains.ClockPulseApp.Service.Extensions;
+﻿using Tellurian.Trains.ClockPulseApp.Service.Extensions;
 
 namespace Tellurian.Trains.ClockPulseApp.Service.Tests;
 
@@ -9,14 +8,14 @@ public class TimeStringExtensionsTests
     [TestMethod]
     public void NullThrows()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             TimeStringExtensions.AsTimeOnly(null));
     }
 
     [TestMethod]
     public void NonTimeThrows()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
             "ABC-".AsTimeOnly());
     }
 
@@ -30,7 +29,7 @@ public class TimeStringExtensionsTests
     [TestMethod]
     public void DigitsOnlyThrows()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
             "12345".AsTimeOnly());
 
     }

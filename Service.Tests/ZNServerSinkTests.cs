@@ -1,14 +1,13 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using System.Net;
 using System.Net.Sockets;
-using Moq;
 using Tellurian.Trains.ClockPulseApp.Service.Sinks;
 
 namespace Tellurian.Trains.ClockPulseApp.Service.Tests;
 
 [TestClass]
-public class ZNServerSinkTests
+public partial class ZNServerSinkTests
 {
     private const int TestPort = 57111;
     private const int ReceiveTimeout = 5000; // 5 second timeout for receives
@@ -30,7 +29,7 @@ public class ZNServerSinkTests
         _cts = new CancellationTokenSource();
     }
 
-    private async Task<UdpReceiveResult?> ReceiveWithTimeout(UdpClient client, int timeoutMs = ReceiveTimeout)
+    private static async Task<UdpReceiveResult?> ReceiveWithTimeout(UdpClient client, int timeoutMs = ReceiveTimeout)
     {
         try
         {
@@ -62,7 +61,7 @@ public class ZNServerSinkTests
         // Cleanup - send response to allow init to complete
         var responseMsg = System.Text.Encoding.UTF8.GetBytes("ZNSERVERPORT:57112");
         await localSocket.SendAsync(responseMsg, responseMsg.Length, result.Value.RemoteEndPoint);
-        await Task.WhenAny(initTask, Task.Delay(ReceiveTimeout));
+        await Task.WhenAny(initTask, Task.Delay(ReceiveTimeout, TestContext.CancellationToken));
     }
 
     [TestMethod]
@@ -89,7 +88,7 @@ public class ZNServerSinkTests
         var idMsgText = System.Text.Encoding.UTF8.GetString(idMsg.Value.Buffer);
         Assert.AreEqual($"ID:{_settings.StationCode},{_settings.StationName}\r\n", idMsgText);
 
-        await Task.WhenAny(initTask, Task.Delay(ReceiveTimeout));
+        await Task.WhenAny(initTask, Task.Delay(ReceiveTimeout, TestContext.CancellationToken));
     }
 
     [TestMethod]
@@ -108,7 +107,7 @@ public class ZNServerSinkTests
         var portResponse = System.Text.Encoding.UTF8.GetBytes($"ZNSERVERPORT:{serverPort}");
         await discoverySocket.SendAsync(portResponse, portResponse.Length, discoveryMsg.Value.RemoteEndPoint);
         await ReceiveWithTimeout(responseSocket); // Skip ID message
-        await Task.WhenAny(initTask, Task.Delay(ReceiveTimeout));
+        await Task.WhenAny(initTask, Task.Delay(ReceiveTimeout, TestContext.CancellationToken));
 
         // Act
         await sink.PositiveVoltageAsync();
@@ -117,11 +116,12 @@ public class ZNServerSinkTests
         var timeMsg = await ReceiveWithTimeout(responseSocket);
         Assert.IsNotNull(timeMsg, "No time update message received within timeout");
         var timeUpdate = System.Text.Encoding.UTF8.GetString(timeMsg.Value.Buffer);
-        StringAssert.StartsWith(timeUpdate, "UHR:");
-        Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(timeUpdate, @"UHR:\d{2}:\d{2}"));
+        Assert.StartsWith(timeUpdate, "UHR:");
+        Assert.IsTrue(TimeRegex().IsMatch(timeUpdate));
     }
 
-    [Ignore("This test fails.")]
+    [TestMethod, Ignore("This test fails.")]
+    
     public async Task HandlesDiscoveryTimeout_Gracefully()
     {
         // Arrange
@@ -131,14 +131,16 @@ public class ZNServerSinkTests
         var initTask = sink.InitializeAsync(new TimeOnly(6, 0));
 
         // Assert - wait for timeout
-        await Task.Delay(ReceiveTimeout);
-        _loggerMock.Verify(l => l.Log(
+        await Task.Delay(ReceiveTimeout, TestContext.CancellationToken);
+#pragma warning disable CA1873 // Avoid potentially expensive logging
+        _loggerMock.Verify(static l => l.Log(
             LogLevel.Warning,
             It.IsAny<EventId>(),
             It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("No ZNServer response received within timeout")),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()
         ), Times.AtLeastOnce);
+#pragma warning restore CA1873 // Avoid potentially expensive logging
     }
 
     [TestMethod]
@@ -194,4 +196,9 @@ public class ZNServerSinkTests
         _cts.Cancel();
         _cts.Dispose();
     }
+
+    public TestContext TestContext { get; set; }
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"UHR:\d{2}:\d{2}")]
+    private static partial System.Text.RegularExpressions.Regex TimeRegex();
 }

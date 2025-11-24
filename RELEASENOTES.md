@@ -1,4 +1,8 @@
-# Release Notes
+# Release Notes 
+## Release 1.14.0
+Release date 2025-11-24
+- **Upgrade to .NET10** with latest Microsoft packages.
+- **Deployment for Linux 32-bit ARM** changed name of zip folder from linux-arm-32 to to **linux-arm** to match runtime identifier used in .NET.
 ## Release 1.13.0
 Release date 2025-06-24
 - **Upgrade to .NET9** with latest Microsoft packages.

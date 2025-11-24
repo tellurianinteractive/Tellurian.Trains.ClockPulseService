@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="README.md" />
+    <File Path="RELEASENOTES.md" />
+  </Folder>
+  <Project Path="Service.Tests/Service.Tests.csproj" />
+  <Project Path="Service/Service.csproj" />
+</Solution>

@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Tellurian.Trains.ClockPulseApp.Service.Tests;
+﻿namespace Tellurian.Trains.ClockPulseApp.Service.Tests;
 
 public partial class PulseGeneratorTests
 {

@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.IO.Ports;
+﻿using System.IO.Ports;
 
 namespace Tellurian.Trains.ClockPulseApp.Service.Tests;
 
@@ -20,9 +19,9 @@ public class SerialPortSinkTests
                 Handshake = Handshake.RequestToSend,
                 DtrEnable = true,
             };
-            await Task.Delay(pauseMilliseconds);
+            await Task.Delay(pauseMilliseconds, TestContext.CancellationToken);
             target.DtrEnable = false;
-            await Task.Delay(pauseMilliseconds);
+            await Task.Delay(pauseMilliseconds, TestContext.CancellationToken);
         }
         else
         {
@@ -41,9 +40,9 @@ public class SerialPortSinkTests
                 Handshake = Handshake.RequestToSend,
                 RtsEnable = true
             };
-            await Task.Delay(pauseMilliseconds);
+            await Task.Delay(pauseMilliseconds, TestContext.CancellationToken);
             target.RtsEnable = false;
-            await Task.Delay(pauseMilliseconds);
+            await Task.Delay(pauseMilliseconds, TestContext.CancellationToken);
         }
         else
         {
@@ -52,4 +51,6 @@ public class SerialPortSinkTests
     }
 
     static bool IsSerialPortAvailable(string portName) => SerialPort.GetPortNames().Contains(portName);
+
+    public TestContext TestContext { get; set; }
 }
