@@ -116,7 +116,7 @@ public partial class ZNServerSinkTests
         var timeMsg = await ReceiveWithTimeout(responseSocket);
         Assert.IsNotNull(timeMsg, "No time update message received within timeout");
         var timeUpdate = System.Text.Encoding.UTF8.GetString(timeMsg.Value.Buffer);
-        Assert.StartsWith(timeUpdate, "UHR:");
+        Assert.StartsWith("UHR:", timeUpdate);
         Assert.IsTrue(TimeRegex().IsMatch(timeUpdate));
     }
 

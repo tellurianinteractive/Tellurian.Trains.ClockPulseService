@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+    paths: [Directory.Build.props]
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+      tag: ${{ steps.get-version.outputs.tag }}
+      should-release: ${{ steps.check-tag.outputs.should-release }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from Directory.Build.props
+        id: get-version
+        run: |
+          version=$(grep -oP '(?<=<Version>)[^<]+' Directory.Build.props)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Check if tag already exists
+        id: check-tag
+        run: |
+          if git rev-parse "v${{ steps.get-version.outputs.version }}" >/dev/null 2>&1; then
+            echo "should-release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should-release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  test:
+    needs: check-version
+    if: needs.check-version.outputs.should-release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run tests
+        run: dotnet test --configuration Release
+
+  publish:
+    needs: [check-version, test]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rid: [linux-arm, linux-arm64, win-x64, win-arm64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish ${{ matrix.rid }}
+        run: >
+          dotnet publish Service/Service.csproj
+          --configuration Release
+          --runtime ${{ matrix.rid }}
+          --self-contained
+          -p:PublishSingleFile=true
+          -p:PublishTrimmed=false
+          --output publish/${{ matrix.rid }}
+
+      - name: Zip output
+        run: |
+          cd publish/${{ matrix.rid }}
+          zip -r ../../clockpulseservice-${{ matrix.rid }}.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: clockpulseservice-${{ matrix.rid }}
+          path: clockpulseservice-${{ matrix.rid }}.zip
+
+  release:
+    needs: [check-version, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create tag
+        run: |
+          git tag ${{ needs.check-version.outputs.tag }}
+          git push origin ${{ needs.check-version.outputs.tag }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.check-version.outputs.tag }}
+          name: Release ${{ needs.check-version.outputs.version }}
+          generate_release_notes: true
+          files: artifacts/clockpulseservice-*.zip

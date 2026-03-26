@@ -1,5 +1,11 @@
-# Release Notes 
+# Release Notes
 ## Release 1.14.0
+Release date 2026-03-26
+- **Updated components** to latest release.
+- **Upgraded test framework** to Microsoft Testing Platform with MSTest SDK.
+- **Added CI/CD** with GitHub Actions for automated releases on version bump.
+- **Deployment** now publishes to GitHub Releases instead of folder publishing.
+## Release 1.13.1
 Release date 2025-11-24
 - **Upgrade to .NET10** with latest Microsoft packages.
 - **Deployment for Linux 32-bit ARM** changed name of zip folder from linux-arm-32 to to **linux-arm** to match runtime identifier used in .NET.
@@ -56,7 +62,7 @@ Release date 2023-06-18:
 Release date 2023-05-02:
 - **Rpi Relay Board Sink** now shortcuts the clock wires when voltage becomes zero
   to reduce inductive spikes in the clock circuit.
-  Thanks to Claudia Mühl for the information.
+  Thanks to Claudia Mï¿½hl for the information.
 
 ## Release 1.5.5
 Release date 2023-04-27:
