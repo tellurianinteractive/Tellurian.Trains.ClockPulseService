@@ -23,7 +23,7 @@ dotnet run --project Service
 
 ## Architecture
 
-This is a .NET 10.0 Worker Service that polls the Fastclock API and generates voltage pulses to synchronize analogue model train clocks. Solution file: `Clock Pulse Service.slnx`.
+This is Clock Integration Service (formerly Clock Pulse Service), a .NET 11.0 Worker Service that polls the Fastclock API and forwards time and clock status to sinks: analogue clock pulses, FREMO ZN servers, UDP broadcast, etc. User documentation lives in `README.md` (sinks and contributors) and the GitHub wiki (source pages in `wiki/`). Solution file: `Clock Pulse Service.slnx`.
 
 ### Core Flow
 

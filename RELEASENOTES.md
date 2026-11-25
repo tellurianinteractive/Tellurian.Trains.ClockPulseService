@@ -1,4 +1,21 @@
 # Release Notes
+## Release 2.0.0
+Release date 2026-11-25
+> The major version marks the new name. The release is backwards compatible; see below.
+- **Renamed to Clock Integration Service** (formerly *Clock Pulse Service*). The service now does more than drive analogue clocks with pulses. For example, it also sends the time to FREMO ZN servers.
+  - The README now lists the available sinks and who contributed them.
+  - Background, installation, configuration and sink details have moved to the [wiki](https://github.com/tellurianinteractive/Tellurian.Trains.ClockPulseService/wiki).
+  - Log output and the systemd service description now use the new name.
+- **Backwards compatible**: you can update an existing installation without changes. These stay the same:
+  - The `appsettings.json` format, including all section and setting names. Your existing file still works.
+  - `AnalogueTime.txt` and the `-r` and `-t` command line options.
+  - The executable name `Tellurian.Trains.ClockPulseApp.Service`.
+  - On Linux, the systemd unit `clockpulse.service` and the default installation folder `/opt/clockpulse`, so `deploy.sh` updates an existing installation.
+  - The download ZIP names (`clockpulseservice-<platform>.zip`) and the GitHub repository address.
+  > NOTE: The only visible difference is that log lines are tagged *Clock Integration Service* instead of *Tellurian.Trains.ClockPulseApp.Service.Worker*.
+  If you filter or search logs by the old name, update the filter.
+- **Upgraded to .NET 11** with the latest Microsoft packages.
+- **Updated Tellurian.Trains.MeetingApp.Contracts** to 3.9.0.
 ## Release 1.14.0
 Release date 2026-03-26
 - **Updated components** to latest release.

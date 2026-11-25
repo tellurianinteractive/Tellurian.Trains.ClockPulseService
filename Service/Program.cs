@@ -13,7 +13,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                 options.TimestampFormat = "HH:mm:ss";
             });
         });
-        services.AddHostedService<Worker>(provider => new Worker(args, configuration, context.HostingEnvironment, loggerFactory.CreateLogger<Worker>()));
+        services.AddHostedService<Worker>(provider => new Worker(args, configuration, context.HostingEnvironment, loggerFactory.CreateLogger(Worker.ServiceName)));
         services.Configure<PulseGeneratorSettings>(
             configuration.GetSection(nameof(PulseGeneratorSettings)));
 

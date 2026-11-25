@@ -136,7 +136,7 @@ public partial class ZNServerSinkTests
         _loggerMock.Verify(static l => l.Log(
             LogLevel.Warning,
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("No ZNServer response received within timeout")),
+            It.Is<It.IsAnyType>((v, t) => v!.ToString()!.Contains("No ZNServer response received within timeout")),
             It.IsAny<Exception>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()
         ), Times.AtLeastOnce);

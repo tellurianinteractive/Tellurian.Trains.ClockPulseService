@@ -1,11 +1,11 @@
-<Project Sdk="MSTest.Sdk/4.1.0">
+<Project Sdk="MSTest.Sdk/4.5.3">
   <PropertyGroup>
     <RootNamespace>Tellurian.Trains.ClockPulseApp.Service.Tests</RootNamespace>
     <AssemblyName>Tellurian.Trains.ClockPulseApp.Service.Tests</AssemblyName>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="Moq" Version="4.21.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Service\Service.csproj" />

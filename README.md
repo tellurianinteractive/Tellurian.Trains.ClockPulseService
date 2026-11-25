@@ -1,88 +1,51 @@
-# Clock Pulse Service
+# Clock Integration Service
 
-**This software calls the [*Fastclock API*](https://github.com/tellurianinteractive/Tellurian.Trains.ModuleMeetingApp/wiki/API-Guidelines)
-It supports:
-- Using a relay board and a 24 Volt power supply it provides the pulses to drive analogue clocks.
-- Provides pulses over a serial port,
-- Providing time to the **ZN Server**.
-- Broadcasts time over UDP for any app to receive.
+**Clock Integration Service connects the [*Fastclock*](https://github.com/tellurianinteractive/Tellurian.Trains.ModuleMeetingApp/wiki/API-Guidelines)
+used at model railway meetings to clocks, displays and systems in the hall.**
 
-Any other clock can be supported by adding a new **Sink**, see below.
+It polls the Fastclock API and forwards the time and clock status to one or more *sinks*.
+Each sink talks to a particular kind of hardware or protocol, and you can run several at once.
+Driving pulse-controlled analogue clocks is one of these sinks; there are others too.
 
-## Support of Hardware
-This is a .NET application that can be compiled to run on most platforms.
-The software is designed to make it easy to support different ways to control both digital and analogue controlled clocks.
-You only need to implement a piece of software called a *sink* (see below).
+The service runs locally in the hall, on a computer such as a Raspberry Pi on the hall's local Wi-Fi network.
+It can get the time from either of these:
+- **A clock server running locally** on the hall network. This needs no Internet connection.
+- **The cloud clock**, when Internet is available.
 
-## Flexible Configuration
-Much of the behaviour is configurable. 
-See this [example](https://github.com/fjallemark/ClockPulseService/blob/master/Service/appsettings.json). 
+You choose the source with one setting (`UseRemoteClock`), so the same setup works with or without Internet at the venue.
 
 ## Sinks
-A *sink* is a component that translates logical clock signals to some form of I/O.
-There are some ready-made *sinks*:
-- **UdpBroadcastPulseSink** broadcasts ASCII bytes over UDP for pulses '+', '-' and '_', for start/stop '|' and '-' and session completed 'X'.
-- **SerialPortPulseSink** sets DTR high for positive voltage, and RTS high for negative voltage. 
-However, it can be configured to use DTR only for both positive and negative voltage.
-- **RpiRelayBoardPulseSink** using three relays to control pulses and polarities.
-The [Rpi Relay Board](https://www.waveshare.com/wiki/RPi_Relay_Board) is a relay hat for *Raspberry Pi*
-that works with this software when running on Linux.
-- **ZNServerSink** for providing time to the [*Zugnummern Meldeanlagen*](https://bmertins.de/FREMO/ZN/index.html). This sink is created by Dirkjan Kaper.
-- There is also a **LoggingPulseSink** that logs to the console.
+| Sink | What it does | Contributed by |
+|------|-------------|----------------|
+| **ZNServerSink** | Sends the fast clock time to a [*Zugnummern-Meldeanlage* (ZN)](https://bmertins.de/FREMO/ZN/index.html) server using the FREMO ZN protocol. The server is found automatically by UDP discovery. | [Dirkjan Kaper](https://github.com/nh-finescale) |
+| **RpiRelayBoardSink** | Drives 12-hour analogue clocks (for example FREMO RUT clocks) with alternating-polarity pulses through a [Waveshare RPi Relay Board](https://www.waveshare.com/wiki/RPi_Relay_Board) on a Raspberry Pi, together with a 24 V power supply for the clocks. A third relay shows whether the clock is stopped or running. | Stefan Fjällemark |
+| **SerialPortSink** | Drives analogue clock pulses through the DTR and RTS lines of a serial port, or through DTR only. | Stefan Fjällemark |
+| **UdpBroadcastSink** | Broadcasts single ASCII characters over UDP for pulses, start/stop and session end, so other software can react. | Stefan Fjällemark |
+| **LoggingSink** | Writes all signals to the console. Useful for testing without hardware. | Stefan Fjällemark |
 
-## Support for pulse controlled analogue clocks
-> If your clock is not a pulse-driven 12-hour clock, then my software is not the right solution. 
-The alternative is to call the clock API and getting the time. 
+You turn sinks on and off in `appsettings.json`. If one sink fails, the others keep working.
 
-### Motivation 
-The whole point with the software is to eliminate the need for any other
-logic translating time to pulses in other software. 
-This software also automatically *fast-forward* the pulsing if the analogue time is not 
-same or one minute after master clock time.
-
-## From Clock API to Pulses 
-The main logic of this application makes frequent calls to the *FastClock API*
-and determines when pulses to analogue clocks should be changed.
-The logical pulses are:
-- **Positive voltage**, sent when moving analogue clock to even minute.
-- **Negative voltage**, sent when moving analogue clock to odd minute.
-- **Zero voltage**, is sent after the configured pulse length duration.
-
-### Fast Forwarding
-When the time provided by calling the *FastClock* API differs more that one minute, 
-the pulses are generated at a faster speed to make analogue clocks to sync faster.
-
-When the *FastClock* is reset to a new session, it sets the time the session start time.
-This often differs from what is presented on the analogue clocks,
-so fast-forwarding starts automatically until the analogue clocks also is at
-the session start time.
-Fast-forwarding speed should be determined by the slowest fast-forwarding clock. 
-
-### Start and Stop Indication
-It is possible to indicate when the clock is stopped and started.
-
-### Working Solution
-During March 2022, I started to make [Clock Pulse Service](https://github.com/fjallemark/ClockPulseService) 
-for polling the [clock API](https://github.com/tellurianinteractive/Tellurian.Trains.ModuleMeetingApp/wiki/API-Guidelines) 
-and generate data about pulses to send. 
-I also bought a [RPi Relay Board](https://www.waveshare.com/wiki/RPi_Relay_Board) 
-and mounted it om my old Raspberry Pi 2. 
-Then I wrote an implementation of [IPulseSink](https://github.com/fjallemark/ClockPulseService/blob/master/Service/RpiRelayBoardPulseSink.cs) 
-for that relay board, and had it to run on the Raspberry Pi to test it out, and after some adjustments, it seems to work as expected.
+Want to connect something else? Writing a new sink is straightforward, and contributions are welcome.
+See [Writing a Sink](https://github.com/tellurianinteractive/Tellurian.Trains.ClockPulseService/wiki/Writing-a-Sink) in the wiki.
 
 ## Get the Software
-To run the app locally, see [available deployments](https://1drv.ms/f/s!AtjQMqeBcCjfkrkqVoRqBs5BIzpQiw?e=TvT6Bi). Select a folder and click download. 
-It will be downloaded as a ZIP-file. Unzip and transfer to the computer you will run it on.
+Download the ZIP file for your platform from [Releases](https://github.com/tellurianinteractive/Tellurian.Trains.ClockPulseService/releases):
+`win-x64`, `win-arm64`, `linux-arm` (Raspberry Pi 32-bit) or `linux-arm64` (Raspberry Pi 64-bit).
+The builds are self-contained, so .NET does not need to be installed.
 
-### Running the Software
-This application must be run on a computer with an I/O device that can 
-be connected to analogue clocks in the hall, for example a RUT-socket.
+## Documentation
+The [wiki](https://github.com/tellurianinteractive/Tellurian.Trains.ClockPulseService/wiki) covers:
+- [Background](https://github.com/tellurianinteractive/Tellurian.Trains.ClockPulseService/wiki/Background): why the service exists and how it started.
+- [How It Works](https://github.com/tellurianinteractive/Tellurian.Trains.ClockPulseService/wiki/How-It-Works): pulses, fast-forwarding and start/stop indication.
+- [Installation and Running](https://github.com/tellurianinteractive/Tellurian.Trains.ClockPulseService/wiki/Installation-and-Running): Windows, Linux and Raspberry Pi, including running as a service.
+- [Configuration](https://github.com/tellurianinteractive/Tellurian.Trains.ClockPulseService/wiki/Configuration): all settings in `appsettings.json`.
+- [Sinks](https://github.com/tellurianinteractive/Tellurian.Trains.ClockPulseService/wiki/Sinks): details and wiring for each sink.
 
-If the *fastclock server* is running in the cloud, you need an Internet connection,
-but if you run the *fastclock server* locally, 
-you can run both this application and the *fastclock server* on the same computer,
-for example on a Raspberry Pi.
+See [RELEASENOTES.md](RELEASENOTES.md) for what has changed.
 
+## Contributors
+- **Stefan Fjällemark**: author and maintainer.
+- **Dirkjan Kaper** ([nh-finescale](https://github.com/nh-finescale)): ZNServerSink.
 
-
-
+## License
+GPL-3.0-or-later.

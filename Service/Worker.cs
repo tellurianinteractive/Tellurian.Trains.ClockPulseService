@@ -13,14 +13,16 @@ namespace Tellurian.Trains.ClockPulseApp.Service;
 public class Worker : BackgroundService
 {
 
-    private readonly ILogger<Worker> Logger;
+    public const string ServiceName = "Clock Integration Service";
+
+    private readonly ILogger Logger;
     private readonly PeriodicTimer Timer;
     private readonly PulseGenerator PulseGenerator;
 
     private readonly bool ResetOnStart;
     private readonly TimeOnly AnalogueClockStartTime;
 
-    public Worker(string[] args, IConfiguration configuration, IHostEnvironment environment, ILogger<Worker> logger)
+    public Worker(string[] args, IConfiguration configuration, IHostEnvironment environment, ILogger logger)
     {
         Logger = logger;
         var settings = GetSettings(configuration);
@@ -74,7 +76,7 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        Logger.LogInformation("App version {version} started.", Assembly.GetExecutingAssembly().GetName().Version);
+        Logger.LogInformation("{service} version {version} started.", ServiceName, Assembly.GetExecutingAssembly().GetName().Version);
         Logger.LogInformation("Settings: {settings}", PulseGenerator);
         Logger.LogInformation("Installed sinks: {sinks}", string.Join(", ", PulseGenerator.InstalledSinksTypes));
 
@@ -121,9 +123,9 @@ public class Worker : BackgroundService
 
     public override async Task StopAsync(CancellationToken stoppingToken)
     {
-        Logger.LogInformation("Stopping service...");
+        Logger.LogInformation("Stopping {service}...", ServiceName);
         Timer.Dispose();
         await PulseGenerator.DisposeAsync();
-        Logger.LogInformation("Stopped service.");
+        Logger.LogInformation("Stopped {service}.", ServiceName);
     }
 }

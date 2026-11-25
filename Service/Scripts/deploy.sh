@@ -45,7 +45,7 @@ if [ "$INSTALL_SERVICE" = true ]; then
     echo "Creating systemd service..."
     sudo tee /etc/systemd/system/clockpulse.service << EOF
 [Unit]
-Description=Clock Pulse Service
+Description=Clock Integration Service
 After=network.target
 
 [Service]
