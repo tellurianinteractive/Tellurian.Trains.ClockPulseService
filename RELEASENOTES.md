@@ -1,4 +1,9 @@
 # Release Notes
+## Release 2.0.1
+Release date 2026-11-25
+- **Fixed ZNServerSink time with 12-hour analogue clocks.** When `Use12HourClock` was set, the ZN server could get the wrong time: 06:00 instead of 18:00, and times that drifted across noon. It could also start from the saved analogue clock time instead of the Fastclock time.
+  The ZN server now always gets the Fastclock time in 24-hour format, sent each time the time changes.
+- **New optional sink interface `ITimeSink`** for sinks that need the actual Fastclock time instead of minute pulses. See [Writing a Sink](https://github.com/tellurianinteractive/Tellurian.Trains.ClockPulseService/wiki/Writing-a-Sink).
 ## Release 2.0.0
 Release date 2026-11-25
 > The major version marks the new name. The release is backwards compatible; see below.

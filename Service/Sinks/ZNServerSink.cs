@@ -3,7 +3,7 @@ using System.Net.Sockets;
 namespace Tellurian.Trains.ClockPulseApp.Service.Sinks;
 
 
-public sealed class ZNServerSink : IPulseSink, IControlSink, IStatusSink, IDisposable
+public sealed class ZNServerSink : IPulseSink, IControlSink, IStatusSink, ITimeSink, IDisposable
 {
     private readonly ILogger Logger;
     private readonly UdpClient BroadcastClient;
@@ -138,8 +138,7 @@ public sealed class ZNServerSink : IPulseSink, IControlSink, IStatusSink, IDispo
         await DiscoverZNServer();
         if (ZNServerEndPoint != null)
         {
-            await SendTimeUpdate(analogueStartTime.ToString("HH:mm"));
-            lastTime = analogueStartTime;
+            if (lastTime.HasValue) await SendTimeUpdate(lastTime.Value.ToString("HH:mm"));
             StartConnectionMonitoring();
         }
     }
@@ -153,24 +152,18 @@ public sealed class ZNServerSink : IPulseSink, IControlSink, IStatusSink, IDispo
 
     private TimeOnly? lastTime;
 
-    public async Task NegativeVoltageAsync()
-    {
-        if (lastTime.HasValue)
-        {
-            var nextTime = lastTime.Value.AddMinutes(1);
-            await SendTimeUpdate(nextTime.ToString("HH:mm"));
-            lastTime = nextTime;
-        }
-    }
+    /// <summary>
+    /// The ZN server gets the Fastclock time in 24-hour format, see <see cref="TimeChangedAsync(TimeOnly)"/>.
+    /// Pulses are for analogue clocks and are ignored.
+    /// </summary>
+    public Task NegativeVoltageAsync() => Task.CompletedTask;
 
-    public async Task PositiveVoltageAsync()
+    public Task PositiveVoltageAsync() => Task.CompletedTask;
+
+    public async Task TimeChangedAsync(TimeOnly time)
     {
-        if (lastTime.HasValue)
-        {
-            var nextTime = lastTime.Value.AddMinutes(1);
-            await SendTimeUpdate(nextTime.ToString("HH:mm"));
-            lastTime = nextTime;
-        }
+        lastTime = time;
+        await SendTimeUpdate(time.ToString("HH:mm"));
     }
 
     public Task ZeroVoltageAsync()

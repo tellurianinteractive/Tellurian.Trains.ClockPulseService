@@ -32,6 +32,7 @@ public sealed class PulseGenerator(PulseGeneratorSettings settings, IEnumerable<
     }
 
     private ClockStatus? Previous;
+    private TimeOnly? LastFastclockTime;
 
     public IEnumerable<string> InstalledSinksTypes => Sinks.Select(s => s.GetType().Name);
 
@@ -46,6 +47,7 @@ public sealed class PulseGenerator(PulseGeneratorSettings settings, IEnumerable<
     {
         if (!IsInitialized) await InitializeAsync();
         await HandleClockStartAndStop(status);
+        await HandleTimeChanged(status);
         if (AnalougueClockShouldNotMove(status)) return;
 
         ServerTime = status.Time.AsTimeOnly(Settings.Use12HourClock);
@@ -136,6 +138,27 @@ public sealed class PulseGenerator(PulseGeneratorSettings settings, IEnumerable<
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Sink {sink} faulted when session was finished.", sink.GetType().Name);
+            }
+        }
+    }
+
+    private async Task HandleTimeChanged(ClockStatus status)
+    {
+        if (status.IsUnavailable || status.Time is not { Length: 5 }) return;
+        var fastclockTime = status.Time.AsTimeOnly();
+        if (fastclockTime == LastFastclockTime) return;
+        LastFastclockTime = fastclockTime;
+        await Notify<ITimeSink>(NotifyTimeChanged);
+
+        async Task NotifyTimeChanged(ITimeSink sink)
+        {
+            try
+            {
+                await sink.TimeChangedAsync(fastclockTime);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Sink {sink} faulted when time changed.", sink.GetType().Name);
             }
         }
     }

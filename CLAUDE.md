@@ -31,7 +31,7 @@ This is Clock Integration Service (formerly Clock Pulse Service), a .NET 11.0 Wo
 
 ### Sink System
 
-Sinks implement one or more of four interfaces (`IPulseSink`, `IControlSink`, `IStatusSink`, `IAnalogueClockStatus`) and are instantiated based on `appsettings.json` configuration. Each sink translates logical signals to hardware I/O:
+Sinks implement `IPulseSink` (required, since all sinks are held as `IPulseSink`) plus any of `IControlSink`, `IStatusSink`, `ITimeSink` (24-hour Fastclock time, used by time-based sinks like ZNServerSink), `IAnalogueClockStatus`, and are instantiated based on `appsettings.json` configuration. Each sink translates logical signals to hardware I/O:
 
 - **SerialPortSink** — DTR/RTS serial lines
 - **RpiRelayBoardSink** — GPIO via Waveshare RPi Relay Board (pins 20, 21, 26)

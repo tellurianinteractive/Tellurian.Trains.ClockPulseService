@@ -10,6 +10,7 @@ namespace Tellurian.Trains.ClockPulseApp.Service.Tests;
 public partial class ZNServerSinkTests
 {
     private const int TestPort = 57111;
+    private const int ServerPort = 57112;
     private const int ReceiveTimeout = 5000; // 5 second timeout for receives
     private readonly Mock<ILogger> _loggerMock;
     private readonly ZNServerSinkSettings _settings;
@@ -92,32 +93,53 @@ public partial class ZNServerSinkTests
     }
 
     [TestMethod]
-    public async Task SendsTimeUpdates_OnPulse()
+    public async Task SendsTimeUpdate_InTwentyFourHourFormat_OnTimeChanged()
     {
         // Arrange
-        var serverPort = 57112;
         using var discoverySocket = new UdpClient(new IPEndPoint(IPAddress.Loopback, TestPort));
-        using var responseSocket = new UdpClient(new IPEndPoint(IPAddress.Loopback, serverPort));
-        using var sink = new ZNServerSink(_settings, _loggerMock.Object);
-
-        // Setup connection
-        var initTask = sink.InitializeAsync(new TimeOnly(6, 0));
-        var discoveryMsg = await ReceiveWithTimeout(discoverySocket);
-        Assert.IsNotNull(discoveryMsg, "No discovery message received within timeout");
-        var portResponse = System.Text.Encoding.UTF8.GetBytes($"ZNSERVERPORT:{serverPort}");
-        await discoverySocket.SendAsync(portResponse, portResponse.Length, discoveryMsg.Value.RemoteEndPoint);
-        await ReceiveWithTimeout(responseSocket); // Skip ID message
-        await Task.WhenAny(initTask, Task.Delay(ReceiveTimeout, TestContext.CancellationToken));
+        using var responseSocket = new UdpClient(new IPEndPoint(IPAddress.Loopback, ServerPort));
+        using var sink = await CreateConnectedSink(discoverySocket, responseSocket);
 
         // Act
-        await sink.PositiveVoltageAsync();
+        await sink.TimeChangedAsync(new TimeOnly(18, 5));
 
         // Assert
         var timeMsg = await ReceiveWithTimeout(responseSocket);
         Assert.IsNotNull(timeMsg, "No time update message received within timeout");
         var timeUpdate = System.Text.Encoding.UTF8.GetString(timeMsg.Value.Buffer);
-        Assert.StartsWith("UHR:", timeUpdate);
         Assert.IsTrue(TimeRegex().IsMatch(timeUpdate));
+        Assert.AreEqual("UHR:18:05", timeUpdate);
+    }
+
+    [TestMethod]
+    public async Task DoesNotSendTimeUpdate_OnPulses()
+    {
+        // Arrange
+        using var discoverySocket = new UdpClient(new IPEndPoint(IPAddress.Loopback, TestPort));
+        using var responseSocket = new UdpClient(new IPEndPoint(IPAddress.Loopback, ServerPort));
+        using var sink = await CreateConnectedSink(discoverySocket, responseSocket);
+
+        // Act
+        await sink.PositiveVoltageAsync();
+        await sink.ZeroVoltageAsync();
+        await sink.NegativeVoltageAsync();
+
+        // Assert
+        var message = await ReceiveWithTimeout(responseSocket, 1000);
+        Assert.IsNull(message, "Pulses should not send time updates to the ZN server");
+    }
+
+    private async Task<ZNServerSink> CreateConnectedSink(UdpClient discoverySocket, UdpClient responseSocket)
+    {
+        var sink = new ZNServerSink(_settings, _loggerMock.Object);
+        var initTask = sink.InitializeAsync(new TimeOnly(6, 0));
+        var discoveryMsg = await ReceiveWithTimeout(discoverySocket);
+        Assert.IsNotNull(discoveryMsg, "No discovery message received within timeout");
+        var portResponse = System.Text.Encoding.UTF8.GetBytes($"ZNSERVERPORT:{ServerPort}");
+        await discoverySocket.SendAsync(portResponse, portResponse.Length, discoveryMsg.Value.RemoteEndPoint);
+        await ReceiveWithTimeout(responseSocket); // Skip ID message
+        await Task.WhenAny(initTask, Task.Delay(ReceiveTimeout, TestContext.CancellationToken));
+        return sink;
     }
 
     [TestMethod, Ignore("This test fails.")]

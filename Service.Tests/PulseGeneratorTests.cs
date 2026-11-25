@@ -71,6 +71,26 @@ public partial class PulseGeneratorTests
 
     }
 
+    [TestMethod]
+    public async Task TimeSinkGetsTwentyFourHourTime_WhenUsing12HourClock()
+    {
+        var sink = new MonitoringTimeSink();
+        var settings = Settings;
+        settings.Use12HourClock = true;
+        var target = new PulseGenerator(settings, [sink], NullLogger.Instance, true, "06:00".AsTimeOnly(true));
+
+        await target.Update(new() { IsRunning = true, Time = "18:00" });
+        await target.Update(new() { IsRunning = true, Time = "18:00" });
+        await target.Update(new() { IsRunning = true, Time = "18:01" });
+        await target.Update(new() { IsUnavailable = true });
+        await target.Update(new() { IsPaused = true, Time = "18:02" });
+
+        CollectionAssert.AreEqual(
+            new[] { new TimeOnly(18, 0), new TimeOnly(18, 1), new TimeOnly(18, 2) },
+            sink.Times.ToArray());
+        Assert.AreEqual("06:01", target.AnalogueTime.AsString());
+    }
+
     public static PulseGenerator CreateTargetWithSinks(IPulseSink sink) =>
             new(Settings, [sink, new LoggingSink(NullLogger.Instance)], NullLogger.Instance, true, "06:00".AsTimeOnly());
 
